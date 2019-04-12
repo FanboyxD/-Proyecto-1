@@ -1,20 +1,25 @@
-#importar la libreria tkinter
+# Import tkinter library.
 from tkinter import *
 import random
 import tkinter.font
 import tkinter.messagebox
-
-#Crear la ventana, su nombre e icono
+#import os
+# Create window, window title, and icon.
 root = Tk()
-root.wm_title("Space Invaders")
+root.wm_title("Space Invaders NEO")
 root.iconbitmap("SpIn.ico.ico")
-
-
-
-#se crean canvas
+# Create menu with "File" submenu and "Quit" Button.
+menubar = Menu(root)
+filemenu = Menu(menubar, tearoff=0)
+filemenu.add_command(label="Quit", command=quit)
+menubar.add_cascade(label="File", underline=0, menu=filemenu)
+root.config(menu=menubar)
+# Create canvas.
 disp = Canvas(root, width=800, height=800, bg="black")
 disp.grid(row=0, column=0)
-root.mainloop()
+gOver = tkinter.font.Font(family="Chiller", size=30, weight="bold")
+otherFont = tkinter.font.Font(family="OCR-A II", size=20)
+menuFont = tkinter.font.Font(family="Fixedsys", size=30)
 class player():
     def __init__(self, x, y):
         self.x = x
@@ -112,3 +117,15 @@ class player():
     def toggleAutoFire(self, event):
         self.autofire = not self.autofire
         print(self.autofire)
+
+p = player(150, 550)
+
+# MAKING SURE THAT THE CANVAS ACTUALLY RECEIVES KEYBOARD INPUT!!!!
+disp.focus_set()
+disp.bind("<Return>", startGame)
+disp.bind("<Key>", writeCheatCode)
+disp.bind("<Down>", eraseCheatCode)
+spawnAliens()
+def drawBackground():
+    pass
+root.mainloop()
