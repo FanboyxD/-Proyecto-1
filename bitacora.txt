@@ -6,3 +6,5 @@ y a�adir sprites
 13/04/2019
 12:00
 Se investigo acerca del uso de los archivos.json y como utilizarlos en python y creamos un programa para comprender su funcionamiento
+14:00
+Se investigaron los archivos csv y se creo un programa para la escritura y lectura de los usuarios
