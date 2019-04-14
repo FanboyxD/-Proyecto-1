@@ -3,6 +3,11 @@
 A partir de un codigo base intentamos comprender el funcionamiento de las clases, como movilizar la nave,
 y a�adir sprites
 
+12/4/2019
+20:00
+Decidimos buscar información sobre como funciona tkinter,para así facilitar 
+nuestro entendimiento sobre este y aprender a programar en el.
+
 13/04/2019
 12:00
 Se investigo acerca del uso de los archivos.json y como utilizarlos en python y creamos un programa para comprender su funcionamiento
