@@ -435,7 +435,6 @@ def writeCheatCode(event):
                     message='''
     HARD MODE is on.
     Prepare yourself.
-
     You're gonna have a BAD time.''')
         cheatCode = ""
     elif cheatCode == "oh baby a triple":
