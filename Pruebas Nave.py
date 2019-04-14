@@ -1,918 +1,501 @@
-import tkinter
+# Import tkinter library.
 from tkinter import *
-from random import uniform as Aleatorio
-from threading import Thread
-import time
-import os
-import winsound
 import random
+import tkinter.font
+import tkinter.messagebox
+import json 
+#import os
+# Create window, window title, and icon.
+root = Tk()
+root.wm_title("Space Invaders NEO")
+root.iconbitmap("SpIn.ico.ico")
+# Create menu with "File" submenu and "Quit" Button.
+menubar = Menu(root)
+filemenu = Menu(menubar, tearoff=0)
+filemenu.add_command(label="Quit", command=quit)
+menubar.add_cascade(label="File", underline=0, menu=filemenu)
+root.config(menu=menubar)
+# Create canvas.
+disp = Canvas(root, width=800, height=800, bg="black")
+disp.grid(row=0, column=0)
+shots = []
+enemyProjectiles = []
+aliens = []
+explosions = []
+opAttack = False
+otherOPAttack = False
+wavesSurvived = 0
+dead = False
+hardMode = False
+gOver = tkinter.font.Font(family="Chiller", size=30, weight="bold")
+otherFont = tkinter.font.Font(family="OCR-A II", size=20)
+menuFont = tkinter.font.Font(family="Fixedsys", size=30)
+gameState = 0
+cheatCode = ""
+# Bullet Class
+class bullet():
+    def __init__(self, x, y, xVel, yVel):
+        self.x = x
+        self.y = y
+        self.xVel = xVel
+        self.yVel = yVel
+        self.sprites = [PhotoImage(file="laser.gif"),
+                        PhotoImage(file="laser.gif")]
+        self.timer = 0
+        self.tPeriod = 0
+        self.period = 5
+        self.dead = False
+    def draw(self):
+        disp.create_image(self.x, self.y - 25,
+                          image=self.sprites[self.tPeriod],
+                          anchor=NW)
+        self.timer += 1
+        self.timer %= self.period
+        if self.timer == 0:
+            self.tPeriod += 1
+            self.tPeriod %= len(self.sprites)
+    def checkCollisions(self):
+        for i in aliens:
+            if i.x + 50 >= self.x and i.x <= self.x + 15 and i.y + 50 >= self.y \
+               and i.y <= self.y + 25:
+                self.dead = True
+                i.hp -= 1
+                explosions.append(explosion(self.x + 7.5, self.y))
 
-def load_img(name):
-    path=os.path.join("imgs",name)
-    img = PhotoImage(file=path)
-    return img
+##        for j in enemyProjectiles:
+##            if j.shotDown:
+##                if j.x + 15 >= self.x and j.x <= self.x + 15 and j.y + 25 >= self.y \
+##                and j.y <= self.y + 25:
+##                    self.dead = True
+##                    j.dead = True
+    def update(self):
+        self.draw()
+        self.x += self.xVel
+        self.y += self.yVel
+        # Bouncing off horizontal walls
+        if self.x >= disp.winfo_width() or self.x <= 0:
+            self.xVel *= -1
+        # 
+        if self.y + 25 >= disp.winfo_height() or self.y <= 0:
+            self.dead = True
 
-global nivel , pts ,bala1 , bala2, bala3 , cantidad , name
-name = '-None-'
-cantidad = 36
-nivel = 1
-pts = 0
-bala1 = True
-#bala2 = True
-#bala3 = True
+        self.checkCollisions()
 
+class enemyBullet(bullet):
+    def __init__(self, x, y, xVel, yVel, shotDown):
+        super().__init__(x, y, xVel, yVel)
+        self.shotDown = shotDown
+        if not self.shotDown:
+            self.sprites = [PhotoImage(file="AlienBullet1.gif"),
+                            PhotoImage(file="AlienBullet2.gif"),
+                            PhotoImage(file="AlienBullet3.gif")]
+        elif random.random() < 0.05:
+            self.sprites = [PhotoImage(file="Coke Can.gif")]
+        else:
+            self.sprites = [PhotoImage(file="Missile1.gif"),
+                            PhotoImage(file="Missile2.gif")]
+    def checkCollisions(self):
+        if self.shotDown:
+            for i in shots:
+                if i.x + 15 >= self.x and i.x <= self.x + 15 and i.y + 25 >= self.y \
+                and i.y <= self.y + 25:
+                    self.dead = True
+                    j.dead = True
+                    explosions.append(explosion(self.x + 7.5, self.y + 12.5))
+            
 
-######Ventana about
-
-
-
-
-
-
-def winabout():
- #   main.withdraw()
-    music_stop()
-    winabout = Toplevel()
-    winabout.title("About")
-    winabout.resizable(width=False,height=False)
-    winabout.geometry("360x640")
-
-    arch_about = open('about.txt','r')
-    texto = Text(winabout )
-
-    texto.insert(END, arch_about.read())
-    texto.pack()
-    Back_ini=Button(winabout, text=" Back ", font=21, command=winabout.destroy).place(x=160,y=500)
-
-    
-    def on_closing():
-        arch_about.close()
-        winabout.destroy()
-    
-
-    winabout.protocol("WM_DELETE_WINDOW", on_closing)
-
-    winabout.mainloop()
-    
-############
-def scores_win():
-    music_stop()
-    scores_win = Toplevel()
-    scores_win.title("Scores")
-    scores_win.resizable(width=False,height=False)
-    scores_win.geometry("360x640")
-
-    arch_scores = open('score.txt','r')
-    texto = Text(scores_win )
-
-    texto.insert(END, arch_scores.read())
-    texto.pack()
-    Back_ini=Button(scores_win, text=" Back ", font=21, command=scores_win.destroy).place(x=160,y=500)
-
-    
-    def close():
-        arch_scores.close()
-        scores_win.destroy()
-    
-
-    scores_win.protocol("WM_DELETE_WINDOW", close)
-
-    scores_win.mainloop()
-
-
-#####Ventana juego
-def wingame():
-    
-    music_stop()
-    wingame = Toplevel()
-    wingame.title('Space Invaders')
-    wingame.resizable(width=False,height=False)
-    wingame.geometry("500x640")
-    
-
-    bicho1=load_img("bicho1.PNG")
-    bicho2=load_img("bicho2.PNG")
-    bloque3=load_img('bloque3.PNG')
-    bloque2=load_img('bloque2.PNG')
-    bloque1=load_img('bloque1.PNG')
-    nave=load_img('nave.PNG')
-    disparo=load_img('disparo.PNG')
-
-
-
-
-    space = tkinter.Canvas(wingame,bg='black',width=500,height=640)
-    space.place(x=0,y=0)
-    space.create_line(0,529,500,529 ,fill='Yellow')
-    space.create_rectangle(0,-20,500,32 ,fill='grey')
-    Back_inicio=Button(wingame, text=" Back ", font=21, command=wingame.destroy).place(x=0,y=0)
-
-
-#    bloqueA3= space.create_image(105,550,image=bloque3)
- #   bloqueA2= space.create_image(105,550,image=bloque2)
- #   bloqueA1= space.create_image(105,550,image=bloque1)
-    
-  #  bloqueB3= space.create_image(250,550,image=bloque3)
-  #  bloqueB2= space.create_image(250,550,image=bloque2)
-  #  bloqueB1= space.create_image(250,550,image=bloque1)
-    
-  #  bloqueC3= space.create_image(395,550,image=bloque3)
-  #  bloqueC2= space.create_image(395,550,image=bloque2)
-  #  bloqueC1= space.create_image(395,550,image=bloque1)
-
-    Nave= space.create_image(250,600,image=nave)
-
-    def add0(A):
-        if len(A)==5:
-            return A
-        elif len(A)<5:
-            return add0('0'+ A )
-        elif len(A)>5:
-            return add0(A[1:])
-
-    
-    def winner():
-        print (space.find_overlapping(0,32,500,528))
-        space.delete('all')
-        Tit= Label(space, text="Victory!",bg="black",fg = "white", font=180).place(x=250,y=300)
-        
-        global pts
-        print (pts)
-        puntos = add0(str(pts))
-        
-        scores = open('score.txt','r+')
-        scores.seek(1)
-        P1 = scores.read(6)
-        scores.seek(11)
-        P1s = scores.read(5)
-        scores.seek(18)
-        P2 = scores.read(6)
-        scores.seek(25)
-        P2s = scores.read(5)
-        scores.seek(33)
-        P3 = scores.read(6)
-        scores.seek(40)
-        P3s = scores.read(5)
-
-        if pts > int(P3):
-            if pts > int (P2):
-                if pts > int (P3):
-                    scores.seek(8)
-                    scores.write(puntos)
+class explosion():
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.sprites = [PhotoImage(file="explosionpurple.gif"),
+                        PhotoImage(file="explosionpurple.gif"),
+                        PhotoImage(file="explosionpurple.gif"),
+                        PhotoImage(file="explosionpurple.gif")]
+        self.timer = 0
+        #os.system("start Explosion.wav")
+    def draw(self):
+        disp.create_image(self.x, self.y - 25,
+                          image=self.sprites[self.timer % len(self.sprites)],
+                          anchor=NW)
+        self.timer += 1
+        # Killing the animation
+        if self.timer >= len(self.sprites):
+            self.dead = True
+class alien():
+    def __init__(self, x, y, t):
+        self.x = x
+        self.y = y
+        self.t = t
+        self.upgrad = False
+        # One-hit wonder alien, no attack
+        if self.t == 1:
+            self.sprites = [PhotoImage(file="invader.gif"),
+                            PhotoImage(file="enemy1_2.gif")]
+            self.period = 15
+            self.moveSpeed = 3
+            self.hp = 1
+            if hardMode:
+                self.t = 3
+                self.upgrad = True
+        # 3-hit alien, no attack
+        if self.t == 2:
+            self.sprites = [PhotoImage(file="enemy2_1.gif"),
+                            PhotoImage(file="enemy2_2.gif")]
+            self.period = 12
+            self.moveSpeed = 3
+            self.hp = 3
+            if hardMode:
+                self.sprites = [PhotoImage(file="StrongAlien1.gif"),
+                                PhotoImage(file="StrongAlien2.gif")]
+                self.period = 10
+                self.hp = 5
+        # One-hit alien, bullet spawner
+        if self.t == 3:
+            self.sprites = [PhotoImage(file="enemy3_2.gif"),
+                            PhotoImage(file="enemy3_1.gif"),
+                            PhotoImage(file="enemy3_2.gif"),
+                            PhotoImage(file="enemy3_1.gif"),
+                            PhotoImage(file="enemy3_2.gif")]
+            self.period = 6
+            self.moveSpeed = 3
+            self.hp = 1
+            if hardMode and not self.upgrad:
+                self.t = 4
+                self.moveSpeed = 3.5
+                self.upgrad = True
+        if self.t == 4:
+            self.sprites = [PhotoImage(file="BlasterAlien1.gif"),
+                            PhotoImage(file="BlasterAlien1.gif"),
+                            PhotoImage(file="BlasterAlien1.gif"),
+                            PhotoImage(file="BlasterAlien1.gif"),
+                            PhotoImage(file="BlasterAlien2.gif"),
+                            PhotoImage(file="BlasterAlien3.gif"),
+                            PhotoImage(file="BlasterAlien2.gif"),
+                            PhotoImage(file="BlasterAlien1.gif"),
+                            PhotoImage(file="BlasterAlien1.gif"),
+                            PhotoImage(file="BlasterAlien4.gif"),
+                            PhotoImage(file="BlasterAlien5.gif"),
+                            PhotoImage(file="BlasterAlien6.gif"),
+                            PhotoImage(file="BlasterAlien7.gif"),
+                            PhotoImage(file="BlasterAlien7.gif")]
+            self.period = 7
+            self.moveSpeed = 2
+            self.hp = 3
+            if hardMode and not self.upgrad:
+                self.t = 5
+        if self.t == 5:
+            self.sprites = [PhotoImage(file="mystery.gif"),
+                            PhotoImage(file="mystery.gif")]
+            self.period = 2
+            self.moveSpeed = 2
+            self.hp = 10
+        self.xVel = self.moveSpeed
+        self.timer = 0
+        self.tPeriod = 0
+        self.moveDownTimer = 0
+        self.moveNext = True
+    def draw(self):
+        disp.create_image(self.x, self.y - 25,
+                          image=self.sprites[self.tPeriod],
+                          anchor=NW)
+        self.timer += 1
+        self.timer %= self.period
+        if self.timer == 0:
+            self.tPeriod += 1
+            self.tPeriod %= len(self.sprites)
+    def update(self):
+        self.draw()
+        self.x += self.xVel
+        if self.x <= 0 or self.x + 50 >= disp.winfo_width():
+            # Speed up, move down
+            self.xVel *= -1.15
+            self.y += 50
+        if self.hp <= 0:
+            self.dead = True
+        if self.t == 3 and self.tPeriod == len(self.sprites) - 1 \
+           and self.timer == self.period - 1 \
+           and random.random() < 0.3:
+            enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 7,
+                                                False))
+            subprocess.Popen(["aplay",
+                              "C://Kevin/Kevin's Stuff/Python Stuff/Space Invaders/Shot.wav"])
+        if self.t == 4 and self.tPeriod == len(self.sprites) - 1 and \
+           self.timer == 0:
+            if random.random() < 0.3:
+                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 1, 7,
+                                                    True))
+                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, -1, 7,
+                                                    True))
+                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 7,
+                                                    True))
+            elif random.random() < 0.7:
+                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 7,
+                                                    True))
+                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 25, 0, 7,
+                                                    True))
+            else:
+                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 7,
+                                                    False))
+            #subprocess.Popen(["afplay", "Shot.wav"])
+        if self.t == 5 and self.tPeriod == 0 and self.timer == 0 and \
+           random.random() < 0.5:
+            if random.random() < 0.1:
+                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 1, 7,
+                                                    False))
+            else:
+                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 1, 7,
+                                                    True))
+            #subprocess.Popen(["afplay", "Shot.wav"])
+# Make a 8rowx6column grid of aliens.
+def spawnAliens():
+    global wavesSurvived
+    for i in range(0, 400, 50):
+        for j in range(0, 300, 50):
+            chancy = random.random()
+            if wavesSurvived <= 2:
+                aliens.append(alien(i, j, 1))
+            elif wavesSurvived <= 3:
+                aliens.append(alien(i, j, random.randint(1, 2)))
+            elif wavesSurvived <= 7:
+                if j >= 200:
+                    aliens.append(alien(i, j, 3))
                 else:
-                    scores.seek(22)
-                    scores.write(puntos) 
-
+                    if chancy <= 0.5 + ((wavesSurvived - 4)/10):
+                        aliens.append(alien(i, j, 2))
+                    else:
+                        aliens.append(alien(i, j, 1))
+            elif wavesSurvived <= 10:
+                aliens.append(alien(i, j, random.randint(1, 3)))
+            elif wavesSurvived <= 15:
+                if chancy <= 0.05 + ((wavesSurvived - 11)/25):
+                    aliens.append(alien(i, j, 4))
+                else:
+                    aliens.append(alien(i, j, random.randint(1, 2)))
+            elif wavesSurvived <= 20:
+                aliens.append(alien(i, j, random.randint(1, 4)))
+            elif wavesSurvived <= 25:
+                aliens.append(alien(i, j, random.randint(2, 4)))
             else:
-                scores.seek(30)
-                scores.write(puntos)
+                aliens.append(alien(i, j, 4))
+    p.hp = 1
+    wavesSurvived += 1
+class player():
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.sprites = [PhotoImage(file="ship.gif"),
+                        PhotoImage(file="ship.gif")]
+        self.timer = 0
+        self.tPeriod = 0
+        self.period = 1
+        self.left = False
+        self.right = False
+        self.up = False
+        self.down = False
+        self.hp = 1
+        self.autofire = False
+        disp.bind("<Left>", self.moveLeft)
+        disp.bind("<Right>", self.moveRight)
+        disp.bind("<KeyRelease-Left>", self.stopLeft)
+        disp.bind("<KeyRelease-Right>", self.stopRight)
+        disp.bind("<Up>", self.moveUp)
+        disp.bind("<Down>", self.moveDown)
+        disp.bind("<KeyRelease-Up>", self.stopUp)
+        disp.bind("<KeyRelease-Down>", self.stopDown)
+        disp.bind("<KeyRelease-space>", self.spawnBullet)
+        disp.bind("<KeyRelease-Shift_L>", self.toggleAutoFire)
+    def draw(self):
+        disp.create_image(self.x, self.y,
+                          image=self.sprites[self.tPeriod],
+                          anchor=NW)
+        self.timer += 1
+        self.timer %= self.period
+        if self.timer == 0:
+            self.tPeriod += 1
+            self.tPeriod %= len(self.sprites)
+        disp.create_text(self.x + 25, self.y - 20, text="HP: " + str(self.hp),
+                         fill="white", font=otherFont)
+    def update(self):
+        global dead
+        if self.hp > 0:
+            if self.left and self.x >= 0:
+                self.x -= 10
+            if self.x < 0:
+                self.x = 0
+            if self.right and self.x + 50 <= disp.winfo_width():
+                self.x += 10
+            if self.up and self.y >= 0:
+                self.y -= 10
+            if self.y < 0:
+                self.y = 0
+            if self.down and self.y + 75 <= disp.winfo_height():
+                self.y += 10
+            if self.x + 50 > disp.winfo_width():
+                self.x = disp.winfo_width() - 50
+            if self.y - 50 > disp.winfo_height():
+                self.y = disp.winfo_height() - 50
+            self.draw()
+            if self.tPeriod == 1 and self.timer == 1 and self.autofire:
+                self.spawnBullet(False)
         else:
-            None
-            
-        def ask():
-            messagebox.askyesno("Exit?", "Return?")
-            if messagebox.askyesno() == True:
-                scores.close()
-                wingame.destroy()
-            else:
-                wingame.destroy()
-                main.destroy()
-        ask()
-     #   texto = Text(winabout )
-
-      #  texto.insert(END, arch_about.read())
-      #  texto.pack()
-
-
-    fin=Button(wingame, text="Finish", font=21, command=winner).place(x=70,y=0)
-        
-    def MoveRight(event):
-        coords_nave = space.coords(Nave)
-        if coords_nave[0] < 475:
-            space.move(Nave,10,0)
-        else:
-            print("Error Movimiento hacia derecha")
-
-
-    def MoveLeft(event):
-        coords_nave = space.coords(Nave)
-        if coords_nave[0] >25:
-            space.move(Nave,-10,0)
-        else:
-            print("Error Movimiento hacia izquierda")
-
-    def MoveUp(event):
-        coords_nave = space.coords(Nave)
-        if coords_nave[0] < 475:
-            space.move(Nave,0,-10)
-        else:
-            print("Error Movimiento hacia arriba")
-            
-    def MoveDown(event):
-        coords_nave = space.coords(Nave)
-        if coords_nave[0] > 25:
-                space.move(Nave,0,10)
-        else:
-            print("Error Movimiento hacia abajo")
-    space.bind("<Up>",MoveUp)
-    space.bind("<Down>",MoveDown)
-    space.bind("<Right>",MoveRight)
-    space.bind("<Left>",MoveLeft)
-    space.bind("<d>",MoveRight)
-    space.bind("<a>",MoveLeft)
-
-    space.focus_set()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#Invasores
-
-
-    
-#######fila 1
-    
-    global fila1 , invasor11,invasor12,invasor13,invasor14,invasor15,invasor16,invasor17,invasor18,invasor19,invasor1A,invasor1B ,invasor1C
-    global inv11 , inv12 , inv13, inv14, inv15, inv16, inv17, inv18, inv19, inv1A, inv1B, inv1C
-    
-    invasor11= space.create_image(14 +0*26,60,image=bicho1,tags='invasores')
-    inv11= 1
-    invasor12= space.create_image(14 +1*26,60,image=bicho1,tags='invasores')
-    inv12= 1
-    invasor13= space.create_image(14 +2*26,60,image=bicho1,tags='invasores')
-    inv13= 1
-    invasor14= space.create_image(14 +3*26,60,image=bicho1,tags='invasores')
-    inv14= 1
-    invasor15= space.create_image(14 +4*26,60,image=bicho1,tags='invasores')
-    inv15= 1
-    invasor16= space.create_image(14 +5*26,60,image=bicho1,tags='invasores')
-    inv16= 1
-    invasor17= space.create_image(14 +6*26,60,image=bicho1,tags='invasores')
-    inv17= 1
-    invasor18= space.create_image(14 +7*26,60,image=bicho1,tags='invasores')
-    inv18= 1
-    invasor19= space.create_image(14 +8*26,60,image=bicho1,tags='invasores')
-    inv19= 1
-    invasor1A= space.create_image(14 +9*26,60,image=bicho1,tags='invasores')
-    inv1A= 1
-    invasor1B= space.create_image(14 +10*26,60,image=bicho1,tags='invasores')
-    inv1B= 1
-    invasor1C= space.create_image(14 +11*26,60,image=bicho1,tags='invasores')
-    inv1C= 1
-
-    fila1 = [invasor11,invasor12,invasor13,invasor14,invasor15,invasor16,invasor17,invasor18,invasor19,invasor1A,invasor1B,invasor1C]
-   
-
-
-######fila 2
-
-    global fila2,invasor21,invasor22,invasor23,invasor24,invasor25,invasor26,invasor27,invasor28,invasor29,invasor2A,invasor2B,invasor2C
-    global inv21 , inv22 , inv23, inv24, inv25, inv26, inv27, inv28, inv29, inv2A, inv2B, inv2C 
-    invasor21= space.create_image(14 +0*26,90,image=bicho1,tags='invasores')
-    inv21= 1
-    invasor22= space.create_image(14 +1*26,90,image=bicho1,tags='invasores')
-    inv22= 1
-    invasor23= space.create_image(14 +2*26,90,image=bicho1,tags='invasores')
-    inv23= 1
-    invasor24= space.create_image(14 +3*26,90,image=bicho1,tags='invasores')
-    inv24= 1
-    invasor25= space.create_image(14 +4*26,90,image=bicho1,tags='invasores')
-    inv25= 1
-    invasor26= space.create_image(14 +5*26,90,image=bicho1,tags='invasores')
-    inv26= 1
-    invasor27= space.create_image(14 +6*26,90,image=bicho1,tags='invasores')
-    inv27= 1
-    invasor28= space.create_image(14 +7*26,90,image=bicho1,tags='invasores')
-    inv28= 1
-    invasor29= space.create_image(14 +8*26,90,image=bicho1,tags='invasores')
-    inv29= 1
-    invasor2A= space.create_image(14 +9*26,90,image=bicho1,tags='invasores')
-    inv2A= 1
-    invasor2B= space.create_image(14 +10*26,90,image=bicho1,tags='invasores')
-    inv2B= 1
-    invasor2C= space.create_image(14 +11*26,90,image=bicho1,tags='invasores')
-    inv2C= 1
-
-    fila2 = [invasor21,invasor22,invasor23,invasor24,invasor25,invasor26,invasor27,invasor28,invasor29,invasor2A,invasor2B,invasor2C]
-   
-
-
-##fila 3
-
-    global fila3,invasor31,invasor32,invasor33,invasor34,invasor35,invasor36,invasor37,invasor38,invasor39,invasor3A,invasor3B,invasor3C
-    global inv31 , inv32 , inv33, inv34, inv35, inv36, inv37, inv38, inv39, inv3A, inv3B, inv3C 
-    invasor31= space.create_image(14 +0*26,120,image=bicho1,tags='invasores')
-    inv31= 1
-    invasor32= space.create_image(14 +1*26,120,image=bicho1,tags='invasores')
-    inv32= 1
-    invasor33= space.create_image(14 +2*26,120,image=bicho1,tags='invasores')
-    inv33= 1
-    invasor34= space.create_image(14 +3*26,120,image=bicho1,tags='invasores')
-    inv34= 1
-    invasor35= space.create_image(14 +4*26,120,image=bicho1,tags='invasores')
-    inv35= 1
-    invasor36= space.create_image(14 +5*26,120,image=bicho1,tags='invasores')
-    inv36= 1
-    invasor37= space.create_image(14 +6*26,120,image=bicho1,tags='invasores')
-    inv37= 1
-    invasor38= space.create_image(14 +7*26,120,image=bicho1,tags='invasores')
-    inv38= 1
-    invasor39= space.create_image(14 +8*26,120,image=bicho1,tags='invasores')
-    inv39= 1
-    invasor3A= space.create_image(14 +9*26,120,image=bicho1,tags='invasores')
-    inv3A= 1
-    invasor3B= space.create_image(14 +10*26,120,image=bicho1,tags='invasores')
-    inv3B= 1
-    invasor3C= space.create_image(14 +11*26,120,image=bicho1,tags='invasores')
-    inv3C= 1
-
-    fila3 = [invasor31,invasor32,invasor33,invasor34,invasor35,invasor36,invasor37,invasor38,invasor39,invasor3A,invasor3B,invasor3C]
-  
-
-    global matriz
-    matriz = [fila1,fila2,fila3]
-
-
-    def gameover():
-        
-        space.delete('all')
-        Titulo= Label(space, text="You have lost",bg="black",fg = "white", font=180).place(x=250,y=300)
-
-
-    
-
-    
-    def mov1():
-        global nivel , max_der, max_izq, max_abajo, N , M, Etapa , alive
-        global fila3x , fila3,fila2x , fila2,fila1x , fila1 , cantidad
-        alive = True
-        Etapa = 1
-        N = 0
-        M = 0
-        speedini = nivel
-        move = 10
-
-        while M < 5:
-            if move > 0:
-                   # print (max_der)
-                while  N < 20:
-                    space.move('invasores',move,0)
-                    time.sleep(speedini)
-                    N +=1
-                        
-                    
-                space.move('invasores',0,30)               
-                move = -move
-                M +=1
-                N = 0
-            elif move < 0:
-                while N < 20:
-                    space.move('invasores',move,0)
-                    time.sleep(speedini)
-                    N+=1
-                space.move('invasores',0,30)
-                move = -move
-                M+=1
-                N = 0
-    #############
-
-        while M < 10:
-            speedini = speedini *4 /5
-            Etapa = 2
-            if move > 0:
-            
-                while  N < 20:
-                    space.move('invasores',move,0)
-                    time.sleep(speedini)
-                    N +=1
-                        
-                    
-                space.move('invasores',0,30)               
-                move = -move
-                M +=1
-                N = 0
-            elif move < 0:
-                while N < 20:
-                    space.move('invasores',move,0)
-                    time.sleep(speedini)
-                    N+=1
-                space.move('invasores',0,30)
-                move = -move
-                M+=1
-                N = 0
-
-
-    ###############                
-        while M < 15:
-            speedini = speedini *4 /5
-            Etapa = 3
-            if move > 0:
-                   # print (max_der)
-                while  N < 20:
-                    space.move('invasores',move,0)
-                    time.sleep(speedini)
-                    N +=1
-                        
-                    
-                space.move('invasores',0,30)               
-                move = -move
-                M +=1
-                N = 0
-            elif move < 0:
-                while N < 20:
-                    space.move('invasores',move,0)
-                    time.sleep(speedini)
-                    N+=1
-                space.move('invasores',0,30)
-                move = -move
-                M+=1
-                N = 0
-        gameover()
-        alive = False
-
-
-
-
-
-        
-###############
-
-
-
-        
-            
-
-
-
-###
-
-    def moverbichos1():
-        global mythr1 
-        mythr1 = Thread(target=mov1,args=())
-        mythr1.start()
-
-    moverbichos1()
-    
-
-
-
-    def moverDisparo1():
-        global mythr 
-        mythr = Thread(target=shoot1,args=())
-        mythr.start()
-          
-#    def moverDisparo2():
-#        global mythr 
-#        mythr = Thread(target=shoot2,args=())
-#        mythr.start()
-#
-#    def moverDisparo3():
-#        global mythr 
-#        mythr = Thread(target=shoot3,args=())
-#        mythr.start()
-
-
-
-
-
-    def overlap(A):
+            dead = True
+        for i in aliens:
+            if i.x + 50 >= self.x and i.x <= self.x + 50 and i.y + 50 >= self.y \
+                and i.y <= self.y + 50:
+                self.hp = -1
+        for j in enemyProjectiles:
+            if j.x + 15 >= self.x and j.x <= self.x + 50 and j.y + 25 >= self.y \
+                and j.y <= self.y + 50:
+                self.hp -= 1
+                j.dead = True
+                if self.hp > 0:
+                    j.yVel *= -1.25
+                    j.y -= 50
+                if self.hp > -1:
+                    explosions.append(explosion(j.x + 7.5, self.y))
+    def moveLeft(self, event):
+        self.left = True
+    def moveRight(self, event):
+        self.right = True
+    def moveUp(self, event):
+        self.up = True
+    def moveDown(self, event):
+        self.down = True
+    def stopUp(self, event):
+        self.up = False
+    def stopDown(self, event):
+        self.down = False
+    def stopLeft(self, event):
+        self.left = False
+    def stopRight(self, event):
+        self.right = False
+    def spawnBullet(self, event):
+        if self.hp > 0:
+            global shots
+            shots.append(bullet(self.x + 25, self.y, 0, -20))
+            if opAttack:
+                shots.append(bullet(self.x + 25, self.y, -3, -20))
+                shots.append(bullet(self.x + 25, self.y, 3, -20))
+            if otherOPAttack:
+                shots.append(bullet(self.x + 25, self.y + 25, 0, -20))
+                shots.append(bullet(self.x + 25, self.y - 25, 0, -20))
+                shots.append(bullet(self.x + 25, self.y - 50, 0, -20))
+                shots.append(bullet(self.x + 25, self.y - 75, 0, -20))
+    def toggleAutoFire(self, event):
+        self.autofire = not self.autofire
+        print(self.autofire)
+
+def drawShots():
+    for i in range(len(shots)):
         try:
-            
-     #       print ( [space.coords(A)[0]-12],[space.coords(A)[1]-10] ,[space.coords(A)[0]+12],[space.coords(A)[1]+10])
-            a= [space.coords(A)[0]-12],[space.coords(A)[1]-10] ,[space.coords(A)[0]+12],[space.coords(A)[1]+10]
-            b = space.find_overlapping(a[0],a[1],a[2],a[3])
-            return b
+            shots[i].update()
+            if shots[i].dead:
+                del shots[i]
         except:
-            None
-
-    def elimbala():
-        global Disparo1 , bala1
-        if Disparo1 in space.find_all():
-                space.move(Disparo1,-10,-10)
-        bala1 = True
-       
-    
-
-    def coli():
-        global invasor11,invasor12,invasor13,invasor14,invasor15,invasor16,invasor17,invasor18,invasor19,invasor1A,invasor1B ,invasor1C
-        global inv11 , inv12 , inv13, inv14, inv15, inv16, inv17, inv18, inv19, inv1A, inv1B, inv1C
-        global invasor21,invasor22,invasor23,invasor24,invasor25,invasor26,invasor27,invasor28,invasor29,invasor2A,invasor2B,invasor2C
-        global inv21 , inv22 , inv23, inv24, inv25, inv26, inv27, inv28, inv29, inv2A, inv2B, inv2C
-        global invasor31,invasor32,invasor33,invasor34,invasor35,invasor36,invasor37,invasor38,invasor39,invasor3A,invasor3B,invasor3C
-        global inv31 , inv32 , inv33, inv34, inv35, inv36, inv37, inv38, inv39, inv3A, inv3B, inv3C
-        global bala1 , Disparo1 , cantidad , pts , Etapa 
-
-       # print (space.find_overelapping(0,32,500,528))
-############ Fila1
-#        if cantidad <1:
-      #           
-      #      return winner()
-        if overlap(invasor11) != (4,) and invasor11 in space.find_all():
-            
-                space.delete(invasor11)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-         
-        elif overlap(invasor12) != (5,) and invasor12 in space.find_all():
-            
-                space.delete(invasor12)            
-                elimbala()                            
-                inv12 =0                
-                pts += Etapa
-                cantidad -=1
-         
-        elif overlap(invasor13) != (6,) and invasor13 in space.find_all():
-                space.delete(invasor13)            
-                elimbala()                            
-                inv13 =0                
-                pts += Etapa
-                cantidad -=1
-           
-        elif overlap(invasor14) !=(7,)             and invasor14 in space.find_all():
-                space.delete(invasor14)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-         
-        elif overlap(invasor15) !=(8,)             and invasor15 in space.find_all():
-                space.delete(invasor15)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-         
-        elif overlap(invasor16) !=(9,)             and invasor16 in space.find_all():
-                space.delete(invasor16)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-          
-        elif overlap(invasor17) !=(10,)             and invasor17 in space.find_all():
-                space.delete(invasor17)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-      
-        elif overlap(invasor18) !=(11,)             and invasor18 in space.find_all():
-                space.delete(invasor18)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-        
-        elif overlap(invasor19) !=(12,)             and invasor19 in space.find_all():
-                space.delete(invasor19)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-         
-        elif overlap(invasor1A) !=(13,)             and invasor1A in space.find_all():
-                space.delete(invasor1A)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-       
-        elif overlap(invasor1B) !=(14,)             and invasor1B in space.find_all():
-                space.delete(invasor1B)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-       
-        elif overlap(invasor1C) !=(15,)             and invasor1C in space.find_all():
-                space.delete(invasor1C)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-         
-        
-############ Fila2
-        elif overlap(invasor21) !=(16,)            and invasor21 in space.find_all():
-                space.delete(invasor21)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor22) !=(17,)          and invasor22 in space.find_all():
-                space.delete(invasor22)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor23) !=(18,)            and invasor23 in space.find_all():
-                space.delete(invasor23)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor24) !=(19,)          and invasor24 in space.find_all():
-                space.delete(invasor24)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor25) !=(20,)            and invasor25 in space.find_all():
-                space.delete(invasor25)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-       
-        elif overlap(invasor26) !=(21,)          and invasor26 in space.find_all():
-                space.delete(invasor26)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-     
-        elif overlap(invasor27) !=(22,)          and invasor27 in space.find_all():
-                space.delete(invasor27)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor28) !=(23,)          and invasor28 in space.find_all():
-                space.delete(invasor28)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor29) !=(24,)           and invasor29 in space.find_all():
-                space.delete(invasor29)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor2A) !=(25,)           and invasor2A in space.find_all():
-                space.delete(invasor2A)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-     
-        elif overlap(invasor2B) !=(26,)            and invasor2B in space.find_all():
-                space.delete(invasor2B)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor2C) !=(27,)          and invasor2C in space.find_all():
-                space.delete(invasor2C)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-  
-        
-
-############ Fila3
-        elif overlap(invasor31) !=(28,)         and invasor31 in space.find_all():
-                space.delete(invasor31)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor32) !=(29,)         and invasor32 in space.find_all():
-                space.delete(invasor32)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-   
-        elif overlap(invasor33) !=(30,)        and invasor33 in space.find_all():
-                space.delete(invasor33)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-   
-        elif overlap(invasor34) !=(31,)           and invasor34 in space.find_all():
-                space.delete(invasor34)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor35) !=(32,)          and invasor35 in space.find_all():
-                space.delete(invasor35)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor36) !=(33,)          and invasor36 in space.find_all():
-                space.delete(invasor36)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor37) !=(34,)            and invasor37 in space.find_all():
-                space.delete(invasor37)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-
-        elif overlap(invasor38) !=(35,)         and invasor38 in space.find_all():
-                space.delete(invasor38)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-   
-        elif overlap(invasor39) !=(36,)           and invasor39 in space.find_all():
-                space.delete(invasor39)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-     
-        elif overlap(invasor3A) !=(37,)         and invasor3A in space.find_all():
-                space.delete(invasor3A)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-  
-        elif overlap(invasor3B) !=(38,)           and invasor3B in space.find_all():
-                space.delete(invasor3B)            
-                elimbala()                            
-                inv3B =0                
-                pts += Etapa
-                cantidad -=1
-  
-        elif overlap(invasor3C) !=(39,)           and invasor3C in space.find_all():
-                space.delete(invasor3C)            
-                elimbala()                            
-                inv11 =0                
-                pts += Etapa
-                cantidad -=1
-                  
-        else:
-            None
-
-
-
-    def shoot(event):
-        global bala1 , bala2 , bala3
-        if bala1:
-            bala1 = False
-            return moverDisparo1()
-#       elif bala2:
-#            bala2 = False
-#            return moverDisparo2()
-#        elif bala3:
-#            bala3 = False
-#            return moverDisparo3()
-        else:
-            print ('1 bala al mismo tiempo')
-
-    
-
-        
-    def shoot1():
-        global bala1 , Disparo1 , invasor11
-      
-        Disparo1= space.create_image(space.coords(Nave)[0],space.coords(Nave)[1]-25,image=disparo)
+            pass
+def drawAliens():
+    for i in range(len(aliens)):
         try:
-            while space.coords(Disparo1)[1] > 10 and bala1 == False: 
-                space.move(Disparo1,0,-5)
-                
-                time.sleep(0.01)
-                coli()
-
-            space.delete(Disparo1)
-            bala1 = True
+            aliens[i].update()
+            if aliens[i].dead:
+                del aliens[i]
         except:
-            space.delete(Disparo1)
-            bala1 = True
-    
+            pass
+def drawExplosions():
+    for i in range(len(explosions)):
+        try:
+            explosions[i].draw()
+            if explosions[i].dead:
+                del explosions[i]
+        except:
+            pass
+def drawEnemyBullets():
+    for i in range(len(enemyProjectiles)):
+        try:
+            enemyProjectiles[i].update()
+            if enemyProjectiles[i].dead:
+                del enemyProjectiles[i]
+        except:
+            pass
+p = player(150, 700)
+def startGame(event):
+    global gameState
+    gameState = 1
+def writeCheatCode(event):
+    global cheatCode
+    global hardMode
+    global opAttack
+    global otherOPAttack
+    global p
+    cheatCode += event.char
+    if cheatCode == "hard":
+        hardMode = True
+        tkinter.messagebox.showwarning(title="WARNING! WARNING!",
+                    message='''
+    HARD MODE is on.
+    Prepare yourself.
 
-
-
-
-
-
-    space.bind("<space>",shoot)
-
-
-
-    
-    wingame.update() 
-    wingame.mainloop()
-
-
-
-
-#########
-
-    
-
-    
-#########Ventana menu    
-main = Tk()
-main.title("Space Invaders")
-main.minsize(360,640)
-main.resizable(width= False, height=False)
-
-bgini=load_img("fondo_inicio.PNG")
-tituloini=load_img("titulo.PNG")
-bichotitulo=load_img("bichotit.PNG")
-
-
-
-Canvas1 = tkinter.Canvas(main,width=360,height=640)
-Canvas1.place(x=0,y=0)
-Canvas1.create_image(180,320,image=bgini)
-Canvas1.create_image(180,100,image=tituloini)
-Canvas1.create_image(180,300,image=bichotitulo)
-aboutbut=Button(Canvas1, text=" About ", font=21, command=winabout).place(x=290,y=600)
-playbut=Button(Canvas1, text=" Play ", font=21, command=wingame).place(x=160,y=460)
-scores=Button(Canvas1, text="Scores", font=21, command=scores_win).place(x=10,y=600)
-
-def nombre():
-    global name
-    texto=data.get()
-    if len (texto) == 6:
-        name = texto
+    You're gonna have a BAD time.''')
+        cheatCode = ""
+    elif cheatCode == "oh baby a triple":
+        opAttack = True
+        if hardMode:
+            tkinter.messagebox.showinfo(title="Hax Unlocked!",
+                    message='''
+    You're probably gonna need this to pass HARD MODE.
+    Good luck getting to round 25.
+    ''')
+        else:
+            tkinter.messagebox.showinfo(title="Hax Unlocked!",
+                    message='''...
+Triple Deluxe Shot is now ON.
+    ''')
+        cheatCode = ""
+    elif cheatCode == "the other one":
+        otherOPAttack = True
+        tkinter.messagebox.showinfo(title="Hax Unlocked!",
+                    message='LAZOR SHOT ON!!!')
+        cheatCode = ""
+    elif cheatCode == "hp up":
+        p.hp += 1
+        cheatCode = ""
+def eraseCheatCode(event):
+    global cheatCode
+    cheatCode = ""
+# MAKING SURE THAT THE CANVAS ACTUALLY RECEIVES KEYBOARD INPUT!!!!
+disp.focus_set()
+disp.bind("<Return>", startGame)
+disp.bind("<Key>", writeCheatCode)
+disp.bind("<W>", eraseCheatCode)
+spawnAliens()
+def drawBackground():
+    pass
+def menu():
+    disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 - 50,
+                     text="Space Invaders", fill="white", font=menuFont)
+    disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 + 20,
+                     text="Press ENTER to start.", fill="white", font=otherFont)
+def draw():
+    disp.delete("all")
+    if gameState:
+        drawBackground()
+        p.update()
+        drawShots()
+        drawAliens()
+        drawEnemyBullets()
+        drawExplosions()
+        if len(aliens) == 0:
+            spawnAliens()
+        if dead:
+            disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2,
+                                 text="GAME OVER", fill="red", font=gOver)
+            disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 + 30,
+                             text="ROUNDS SURVIVED: " + str(wavesSurvived),
+                             fill="yellow", font=otherFont)
     else:
-        messagebox.showinfo(message="Name must be 6 characters")
-
-data = StringVar()
-textField = Entry(Canvas1,textvariable=data).place(x=125,y=435)
-savename=Button(Canvas1, text="Set Name",command=nombre).place(x=255,y=435)
-
-def nivel_1():
-        global nivel
-        nivel = 1
-        
-def nivel_2():
-        global nivel
-        nivel = 0.6
-       
-def nivel_3():
-        global nivel
-        nivel = 0.3
-      
-        
-lvl1=Button(Canvas1, text="Level 1", font=21, command=nivel_1).place(x=90,y=540)
-lvl2=Button(Canvas1, text="Level 2", font=21, command=nivel_2).place(x=160,y=540)
-lvl3=Button(Canvas1, text="Level 3", font=21, command=nivel_3).place(x=230,y=540)
-
-
-def musica():
-    winsound.PlaySound("kingsplan.wav",winsound.SND_ASYNC)
-
-def music_stop():
-    winsound.PlaySound(None,0)
-
-def play_music():
-    music_thread=Thread(target=musica,args=())
-    music_thread.daemon = True
-    music_thread.start()
-
-play_music()
-
-
-def closing():
-    music_stop()    
-    main.destroy()
-    
-
-main.protocol("WM_DELETE_WINDOW", closing)    
-main.mainloop()  
+        drawBackground()
+        menu()
+    root.after(25, draw)
+draw()
+root.mainloop()
