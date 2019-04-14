@@ -13,3 +13,8 @@ nuestro entendimiento sobre este y aprender a programar en el.
 Se investigo acerca del uso de los archivos.json y como utilizarlos en python y creamos un programa para comprender su funcionamiento
 14:00
 Se investigaron los archivos csv y se creo un programa para la escritura y lectura de los usuarios
+
+14/04/2019
+12:00
+Hicimos un programa con la nave defensora y logramos que se moviera en todas las direcciones y la preparamos para luego añadir un menu
+antes de iniciar el juego
