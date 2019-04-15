@@ -3,7 +3,8 @@ from tkinter import *
 import random
 import tkinter.font
 import tkinter.messagebox
-import json 
+import json
+from winsound import*
 #import os
 # Create window, window title, and icon.
 root = Tk()
@@ -41,6 +42,7 @@ class bullet():
         self.yVel = yVel
         self.sprites = [PhotoImage(file="laser.gif"),
                         PhotoImage(file="laser.gif")]
+        self.playmusic = PlaySound('shoot.wav',SND_FILENAME|SND_ASYNC)
         self.timer = 0
         self.tPeriod = 0
         self.period = 5
@@ -80,7 +82,6 @@ class bullet():
             self.dead = True
 
         self.checkCollisions()
-
 class enemyBullet(bullet):
     def __init__(self, x, y, xVel, yVel, shotDown):
         super().__init__(x, y, xVel, yVel)
@@ -435,6 +436,7 @@ def writeCheatCode(event):
                     message='''
     HARD MODE is on.
     Prepare yourself.
+
     You're gonna have a BAD time.''')
         cheatCode = ""
     elif cheatCode == "oh baby a triple":
