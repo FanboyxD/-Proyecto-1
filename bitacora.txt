@@ -18,3 +18,8 @@ Se investigaron los archivos csv y se creo un programa para la escritura y lectu
 12:00
 Hicimos un programa con la nave defensora y logramos que se moviera en todas las direcciones y la preparamos para luego añadir un menu
 antes de iniciar el juego
+
+15/04/2019
+1:00
+Investigamos sobre como añadir pistas de audio al programa, y como ejecutarlas al mismo tiempo que la animación, para así evitar 
+que hayan cortes en estas.
