@@ -23,3 +23,5 @@ antes de iniciar el juego
 1:00
 Investigamos sobre como añadir pistas de audio al programa, y como ejecutarlas al mismo tiempo que la animación, para así evitar 
 que hayan cortes en estas.
+13:00
+Se investigan los UML(diagrama de clases) y se inicia la parte escrita del proyecto
