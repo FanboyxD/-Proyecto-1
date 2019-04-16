@@ -31,3 +31,9 @@ Aprendimos el control de los "invaders"
 17:00
 Se añade una barra de menu con distintas opciones para el jugador 
 Añadimos un texto que muestra el nivel en el que se encuentra el jugador y el score en tiempo real
+
+16/04/2019
+13:00
+Creamos una opcion para reiniciar el juego
+
+
