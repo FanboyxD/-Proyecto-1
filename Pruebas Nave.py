@@ -1,23 +1,46 @@
-# Import tkinter library.
+#----------------------------------librerias--------------------------------#
 from tkinter import *
 import random
 import tkinter.font
 import tkinter.messagebox
 import json
 import time
+import csv
 from winsound import*
 #import os
-# Create window, window title, and icon.
+
+#-------------------Ventana------------------------------------------------#
 root = Tk()
 root.wm_title("Space Invaders NEO")
 root.iconbitmap("SpIn.ico.ico")
-# Create menu with "File" submenu and "Quit" Button.
-menubar = Menu(root)
-filemenu = Menu(menubar, tearoff=0)
-filemenu.add_command(label="Quit", command=quit)
-menubar.add_cascade(label="File", underline=0, menu=filemenu)
+root.resizable(width=False, height=False)
+#-------------------Barra-de-menu------------------------------------------#
+
+def salir():#Funcion que pregunta si el usuario desea salir del juego
+    pregunta = tkinter.messagebox.askyesno('Salir','''Si desea salir del juego seleccione: si
+Si desea salir al menu seleccione: no''' )
+    if pregunta == True:
+        root.destroy()
+    
+
+def version():#funcion que muestra una ventana emergente con la version del programa
+    tkinter.messagebox.showinfo("Space invaders",'''Instituto Tecnologico de Costa Rica
+        Space Invaders v0.5''')
+
+    
+
+menubar = Menu(root)#Se crea la barra de menu
 root.config(menu=menubar)
-# Create canvas.
+filemenu = Menu(menubar, tearoff=0)
+
+filemenu.add_command(label="Quit", command=salir)#sub menu de "file"
+menubar.add_cascade(label="File", underline=0, menu=filemenu)#menu en la barra de menu
+aboutmenu = Menu(menubar, tearoff=0)
+aboutmenu.add_command(label="Acerca de ...", command=version)#sub menu de "about"
+menubar.add_cascade(label="About", underline=0, menu=aboutmenu)#menu en la barra
+
+
+#--------------Canvas-o-Contenedores---------------------------#
 disp = Canvas(root, width=800, height=800, bg="black")
 disp.grid(row=0, column=0)
 w = Label(disp, text = "Nivel 1")
@@ -28,14 +51,16 @@ explosions = []
 opAttack = False
 otherOPAttack = False
 wavesSurvived = 0
+Score = 0
 dead = False
-hardMode = False
 gOver = tkinter.font.Font(family="Chiller", size=30, weight="bold")
 otherFont = tkinter.font.Font(family="OCR-A II", size=20)
 menuFont = tkinter.font.Font(family="Fixedsys", size=30)
 gameState = 0
 cheatCode = ""
-# Bullet Class
+
+#--------------------Clase-balas-----------------------------------#
+
 class bullet():
     def __init__(self, x, y, xVel, yVel):
         self.x = x
@@ -59,19 +84,15 @@ class bullet():
             self.tPeriod += 1
             self.tPeriod %= len(self.sprites)
     def checkCollisions(self):
+        global Score
         for i in aliens:
             if i.x + 50 >= self.x and i.x <= self.x + 15 and i.y + 50 >= self.y \
                and i.y <= self.y + 25:
                 self.dead = True
                 i.hp -= 1
+                Score += 1
                 explosions.append(explosion(self.x + 7.5, self.y))
 
-##        for j in enemyProjectiles:
-##            if j.shotDown:
-##                if j.x + 15 >= self.x and j.x <= self.x + 15 and j.y + 25 >= self.y \
-##                and j.y <= self.y + 25:
-##                    self.dead = True
-##                    j.dead = True
     def update(self):
         self.draw()
         self.x += self.xVel
@@ -92,12 +113,8 @@ class enemyBullet(bullet):
             self.sprites = [PhotoImage(file="AlienBullet1.gif"),
                             PhotoImage(file="AlienBullet2.gif"),
                             PhotoImage(file="AlienBullet3.gif")]
-        elif random.random() < 0.05:
-            self.sprites = [PhotoImage(file="Coke Can.gif")]
-        else:
-            self.sprites = [PhotoImage(file="Missile1.gif"),
-                            PhotoImage(file="Missile2.gif")]
     def checkCollisions(self):
+
         if self.shotDown:
             for i in shots:
                 if i.x + 15 >= self.x and i.x <= self.x + 15 and i.y + 25 >= self.y \
@@ -130,7 +147,6 @@ class alien():
         self.x = x
         self.y = y
         self.t = t
-        self.upgrad = False
         # One-hit wonder alien, no attack
         if self.t == 1:
             self.sprites = [PhotoImage(file="invader.gif"),
@@ -138,9 +154,6 @@ class alien():
             self.period = 15
             self.moveSpeed = 3
             self.hp = 1
-            if hardMode:
-                self.t = 3
-                self.upgrad = True
         # 3-hit alien, no attack
         if self.t == 2:
             self.sprites = [PhotoImage(file="enemy2_1.gif"),
@@ -148,11 +161,7 @@ class alien():
             self.period = 12
             self.moveSpeed = 3
             self.hp = 3
-            if hardMode:
-                self.sprites = [PhotoImage(file="StrongAlien1.gif"),
-                                PhotoImage(file="StrongAlien2.gif")]
-                self.period = 10
-                self.hp = 5
+
         # One-hit alien, bullet spawner
         if self.t == 3:
             self.sprites = [PhotoImage(file="enemy3_1.gif"),
@@ -160,24 +169,9 @@ class alien():
             self.period = 6
             self.moveSpeed = 3
             self.hp = 1
-            if hardMode and not self.upgrad:
-                self.t = 4
-                self.moveSpeed = 3.5
-                self.upgrad = True
-        if self.t == 4:
-            self.sprites = [PhotoImage(file="Missile Alien.gif"),
-                            PhotoImage(file="Missile Alien.gif")]
             self.period = 7
             self.moveSpeed = 2
             self.hp = 3
-            if hardMode and not self.upgrad:
-                self.t = 5
-        if self.t == 5:
-            self.sprites = [PhotoImage(file="mystery.gif"),
-                            PhotoImage(file="mystery.gif")]
-            self.period = 2
-            self.moveSpeed = 2
-            self.hp = 10
         self.xVel = self.moveSpeed
         self.timer = 0
         self.tPeriod = 0
@@ -384,36 +378,19 @@ def drawEnemyBullets():
                 del enemyProjectiles[i]
         except:
             pass
-p = player(150, 700)
+p = player(150, 650)
 def startGame(event):
     global gameState
     gameState = 1
 def writeCheatCode(event):
     global cheatCode
-    global hardMode
     global opAttack
     global otherOPAttack
     global p
     cheatCode += event.char
-    if cheatCode == "hard":
-        hardMode = True
-        tkinter.messagebox.showwarning(title="WARNING! WARNING!",
-                    message='''
-    HARD MODE is on.
-    Prepare yourself.
-
-    You're gonna have a BAD time.''')
-        cheatCode = ""
-    elif cheatCode == "oh baby a triple":
+    if cheatCode == "oh baby a triple":
         opAttack = True
-        if hardMode:
-            tkinter.messagebox.showinfo(title="Hax Unlocked!",
-                    message='''
-    You're probably gonna need this to pass HARD MODE.
-    Good luck getting to round 25.
-    ''')
-        else:
-            tkinter.messagebox.showinfo(title="Hax Unlocked!",
+        tkinter.messagebox.showinfo(title="Hax Unlocked!",
                     message='''...
 Triple Deluxe Shot is now ON.
     ''')
@@ -453,6 +430,8 @@ def draw():
         drawExplosions()
         disp.create_text(disp.winfo_width()/2-310, disp.winfo_height()/2-380,
                              text="Nivel Actual "+str(wavesSurvived), fill="white", font=otherFont)
+        disp.create_text(disp.winfo_width()/2-160, disp.winfo_height()/2-380,
+                             text="Score "+ str(Score), fill="White", font=otherFont)
         if len(aliens) == 0:
             spawnAliens()
         if wavesSurvived >= 4:
