@@ -25,3 +25,9 @@ Investigamos sobre como añadir pistas de audio al programa, y como ejecutarlas 
 que hayan cortes en estas.
 13:00
 Se investigan los UML(diagrama de clases) y se inicia la parte escrita del proyecto
+15:00
+logramos añadir pistas de audio al juego
+Aprendimos el control de los "invaders" 
+17:00
+Se añade una barra de menu con distintas opciones para el jugador 
+Añadimos un texto que muestra el nivel en el que se encuentra el jugador y el score en tiempo real
