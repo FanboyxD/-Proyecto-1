@@ -4,6 +4,7 @@ import random
 import tkinter.font
 import tkinter.messagebox
 import json
+import time
 from winsound import*
 #import os
 # Create window, window title, and icon.
@@ -19,6 +20,7 @@ root.config(menu=menubar)
 # Create canvas.
 disp = Canvas(root, width=800, height=800, bg="black")
 disp.grid(row=0, column=0)
+w = Label(disp, text = "Nivel 1")
 shots = []
 enemyProjectiles = []
 aliens = []
@@ -80,7 +82,7 @@ class bullet():
         # 
         if self.y + 25 >= disp.winfo_height() or self.y <= 0:
             self.dead = True
-
+        
         self.checkCollisions()
 class enemyBullet(bullet):
     def __init__(self, x, y, xVel, yVel, shotDown):
@@ -153,10 +155,7 @@ class alien():
                 self.hp = 5
         # One-hit alien, bullet spawner
         if self.t == 3:
-            self.sprites = [PhotoImage(file="enemy3_2.gif"),
-                            PhotoImage(file="enemy3_1.gif"),
-                            PhotoImage(file="enemy3_2.gif"),
-                            PhotoImage(file="enemy3_1.gif"),
+            self.sprites = [PhotoImage(file="enemy3_1.gif"),
                             PhotoImage(file="enemy3_2.gif")]
             self.period = 6
             self.moveSpeed = 3
@@ -166,20 +165,8 @@ class alien():
                 self.moveSpeed = 3.5
                 self.upgrad = True
         if self.t == 4:
-            self.sprites = [PhotoImage(file="BlasterAlien1.gif"),
-                            PhotoImage(file="BlasterAlien1.gif"),
-                            PhotoImage(file="BlasterAlien1.gif"),
-                            PhotoImage(file="BlasterAlien1.gif"),
-                            PhotoImage(file="BlasterAlien2.gif"),
-                            PhotoImage(file="BlasterAlien3.gif"),
-                            PhotoImage(file="BlasterAlien2.gif"),
-                            PhotoImage(file="BlasterAlien1.gif"),
-                            PhotoImage(file="BlasterAlien1.gif"),
-                            PhotoImage(file="BlasterAlien4.gif"),
-                            PhotoImage(file="BlasterAlien5.gif"),
-                            PhotoImage(file="BlasterAlien6.gif"),
-                            PhotoImage(file="BlasterAlien7.gif"),
-                            PhotoImage(file="BlasterAlien7.gif")]
+            self.sprites = [PhotoImage(file="Missile Alien.gif"),
+                            PhotoImage(file="Missile Alien.gif")]
             self.period = 7
             self.moveSpeed = 2
             self.hp = 3
@@ -219,8 +206,6 @@ class alien():
            and random.random() < 0.3:
             enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 7,
                                                 False))
-            subprocess.Popen(["aplay",
-                              "C://Kevin/Kevin's Stuff/Python Stuff/Space Invaders/Shot.wav"])
         if self.t == 4 and self.tPeriod == len(self.sprites) - 1 and \
            self.timer == 0:
             if random.random() < 0.3:
@@ -238,7 +223,6 @@ class alien():
             else:
                 enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 7,
                                                     False))
-            #subprocess.Popen(["afplay", "Shot.wav"])
         if self.t == 5 and self.tPeriod == 0 and self.timer == 0 and \
            random.random() < 0.5:
             if random.random() < 0.1:
@@ -247,38 +231,19 @@ class alien():
             else:
                 enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 1, 7,
                                                     True))
-            #subprocess.Popen(["afplay", "Shot.wav"])
 # Make a 8rowx6column grid of aliens.
 def spawnAliens():
     global wavesSurvived
     for i in range(0, 400, 50):
         for j in range(0, 300, 50):
             chancy = random.random()
-            if wavesSurvived <= 2:
-                aliens.append(alien(i, j, 1))
-            elif wavesSurvived <= 3:
-                aliens.append(alien(i, j, random.randint(1, 2)))
-            elif wavesSurvived <= 7:
-                if j >= 200:
-                    aliens.append(alien(i, j, 3))
-                else:
-                    if chancy <= 0.5 + ((wavesSurvived - 4)/10):
-                        aliens.append(alien(i, j, 2))
-                    else:
-                        aliens.append(alien(i, j, 1))
-            elif wavesSurvived <= 10:
+            if wavesSurvived <= 0:
+                aliens.append(alien(i, j, 2))
+            elif wavesSurvived <= 1:
                 aliens.append(alien(i, j, random.randint(1, 3)))
-            elif wavesSurvived <= 15:
-                if chancy <= 0.05 + ((wavesSurvived - 11)/25):
+            elif wavesSurvived <=2 :
+                if j >= 200:
                     aliens.append(alien(i, j, 4))
-                else:
-                    aliens.append(alien(i, j, random.randint(1, 2)))
-            elif wavesSurvived <= 20:
-                aliens.append(alien(i, j, random.randint(1, 4)))
-            elif wavesSurvived <= 25:
-                aliens.append(alien(i, j, random.randint(2, 4)))
-            else:
-                aliens.append(alien(i, j, 4))
     p.hp = 1
     wavesSurvived += 1
 class player():
@@ -486,9 +451,15 @@ def draw():
         drawAliens()
         drawEnemyBullets()
         drawExplosions()
+        disp.create_text(disp.winfo_width()/2-310, disp.winfo_height()/2-380,
+                             text="Nivel Actual "+str(wavesSurvived), fill="white", font=otherFont)
         if len(aliens) == 0:
             spawnAliens()
-        if dead:
+        if wavesSurvived >= 4:
+            disp.delete("all")
+            disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2,
+                                 text="You Win", fill="Blue", font=gOver)
+        elif dead:
             disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2,
                                  text="GAME OVER", fill="red", font=gOver)
             disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 + 30,
@@ -499,4 +470,5 @@ def draw():
         menu()
     root.after(25, draw)
 draw()
+
 root.mainloop()
