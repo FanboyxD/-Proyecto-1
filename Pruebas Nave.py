@@ -92,6 +92,7 @@ class bullet():
                 i.hp -= 1
                 Score += 1
                 explosions.append(explosion(self.x + 7.5, self.y))
+                self.explote=PlaySound('invaderkilled.wav',SND_FILENAME|SND_ASYNC)
 
     def update(self):
         self.draw()
@@ -129,8 +130,6 @@ class explosion():
         self.x = x
         self.y = y
         self.sprites = [PhotoImage(file="explosionpurple.gif"),
-                        PhotoImage(file="explosionpurple.gif"),
-                        PhotoImage(file="explosionpurple.gif"),
                         PhotoImage(file="explosionpurple.gif")]
         self.timer = 0
         #os.system("start Explosion.wav")
@@ -167,8 +166,13 @@ class alien():
             self.sprites = [PhotoImage(file="enemy3_1.gif"),
                             PhotoImage(file="enemy3_2.gif")]
             self.period = 6
-            self.moveSpeed = 3
             self.hp = 1
+            self.period = 7
+            self.moveSpeed = 2
+            self.hp = 1
+        if self.t == 4:
+            self.sprites = [PhotoImage(file="Missile Alien.gif"),
+                            PhotoImage(file="Missile Alien.gif")]
             self.period = 7
             self.moveSpeed = 2
             self.hp = 3
@@ -303,7 +307,7 @@ class player():
         for i in aliens:
             if i.x + 50 >= self.x and i.x <= self.x + 50 and i.y + 50 >= self.y \
                 and i.y <= self.y + 50:
-                self.hp = -1
+                self.hp = -1 
         for j in enemyProjectiles:
             if j.x + 15 >= self.x and j.x <= self.x + 50 and j.y + 25 >= self.y \
                 and j.y <= self.y + 50:
@@ -345,7 +349,7 @@ class player():
     def toggleAutoFire(self, event):
         self.autofire = not self.autofire
         print(self.autofire)
-
+            
 def drawShots():
     for i in range(len(shots)):
         try:
