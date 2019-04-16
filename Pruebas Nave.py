@@ -10,17 +10,41 @@ from winsound import*
 #import os
 
 #-------------------Ventana------------------------------------------------#
-root = Tk()
+root = Tk()#Se crea la ventana/Titulo/Icono de la ventana/No se puede redimencionar
 root.wm_title("Space Invaders NEO")
 root.iconbitmap("SpIn.ico.ico")
 root.resizable(width=False, height=False)
 #-------------------Barra-de-menu------------------------------------------#
 
-def salir():#Funcion que pregunta si el usuario desea salir del juego
-    pregunta = tkinter.messagebox.askyesno('Salir','''Si desea salir del juego seleccione: si
-Si desea salir al menu seleccione: no''' )
+def salir():
+    pregunta = tkinter.messagebox.askyesnocancel('Salir','''Si desea salir del juego seleccione: si
+        Si desea salir al menu seleccione: no''' )
     if pregunta == True:
         root.destroy()
+    elif pregunta == False:
+        global gameState
+        gameState = 0
+        global p
+        p = player(400,650)
+        global wavesSurvived
+        wavesSurvived = 0
+        global Score
+        Score = 0
+        global shots
+        shots = []
+        global enemyProjectiles
+        enemyProjectiles = []
+        global aliens
+        aliens = []
+        global explosions
+        explosions = []
+        global AtaqueOP
+        AtaqueOP = False
+        global AtaqueOP2
+        AtaqueOP2 = False
+        global dead
+        dead = False
+        spawnAliens()
     
 
 def version():#funcion que muestra una ventana emergente con la version del programa
@@ -41,15 +65,16 @@ menubar.add_cascade(label="About", underline=0, menu=aboutmenu)#menu en la barra
 
 
 #--------------Canvas-o-Contenedores---------------------------#
-disp = Canvas(root, width=800, height=800, bg="black")
+disp = Canvas(root, width=800, height=800, bg="black")#Contenedor principal
 disp.grid(row=0, column=0)
 w = Label(disp, text = "Nivel 1")
+#Variables necesarias para el funcionamiento del programa
 shots = []
 enemyProjectiles = []
 aliens = []
 explosions = []
-opAttack = False
-otherOPAttack = False
+AtaqueOP = False
+AtaqueOP2 = False
 wavesSurvived = 0
 Score = 0
 dead = False
@@ -339,10 +364,10 @@ class player():
         if self.hp > 0:
             global shots
             shots.append(bullet(self.x + 25, self.y, 0, -20))
-            if opAttack:
+            if AtaqueOP:
                 shots.append(bullet(self.x + 25, self.y, -3, -20))
                 shots.append(bullet(self.x + 25, self.y, 3, -20))
-            if otherOPAttack:
+            if AtaqueOP2:
                 shots.append(bullet(self.x + 25, self.y + 25, 0, -20))
                 shots.append(bullet(self.x + 25, self.y - 25, 0, -20))
                 shots.append(bullet(self.x + 25, self.y - 50, 0, -20))
@@ -389,17 +414,17 @@ def startGame(event):
     gameState = 1
 def writeCheatCode(event):
     global cheatCode
-    global opAttack
-    global otherOPAttack
+    global AtaqueOP
+    global AtaqueOP2
     global p
     cheatCode += event.char
     if cheatCode == "pra pra pra":
-        opAttack = True
+        AtaqueOP = True
         tkinter.messagebox.showinfo(title="Hack Activado!",
                     message='Has activado el triple disparo.')
         cheatCode = ""
     elif cheatCode == "on fire":
-        otherOPAttack = True
+        AtaqueOP2 = True
         tkinter.messagebox.showinfo(title="Hax Unlocked!",
                     message='RAFAGA !!!')
         cheatCode = ""
@@ -413,7 +438,7 @@ def eraseCheatCode(event):
 disp.focus_set()
 disp.bind("<Return>", startGame)
 disp.bind("<Key>", writeCheatCode)
-disp.bind("<W>", eraseCheatCode)
+disp.bind("<q>", eraseCheatCode)
 spawnAliens()
 def drawBackground():
     pass
