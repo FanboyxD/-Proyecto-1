@@ -54,7 +54,7 @@ wavesSurvived = 0
 Score = 0
 dead = False
 gOver = tkinter.font.Font(family="Chiller", size=30, weight="bold")
-otherFont = tkinter.font.Font(family="OCR-A II", size=20)
+otherFont = tkinter.font.Font(family="OCR-A II", size=14)
 menuFont = tkinter.font.Font(family="Fixedsys", size=30)
 gameState = 0
 cheatCode = ""
@@ -388,19 +388,17 @@ def writeCheatCode(event):
     global otherOPAttack
     global p
     cheatCode += event.char
-    if cheatCode == "oh baby a triple":
+    if cheatCode == "pra pra pra":
         opAttack = True
-        tkinter.messagebox.showinfo(title="Hax Unlocked!",
-                    message='''...
-Triple Deluxe Shot is now ON.
-    ''')
+        tkinter.messagebox.showinfo(title="Hack Activado!",
+                    message='Has activado el triple disparo.')
         cheatCode = ""
-    elif cheatCode == "the other one":
+    elif cheatCode == "on fire":
         otherOPAttack = True
         tkinter.messagebox.showinfo(title="Hax Unlocked!",
-                    message='LAZOR SHOT ON!!!')
+                    message='RAFAGA !!!')
         cheatCode = ""
-    elif cheatCode == "hp up":
+    elif cheatCode == "vida extra":
         p.hp += 1
         cheatCode = ""
 def eraseCheatCode(event):
