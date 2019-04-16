@@ -84,13 +84,11 @@ class bullet():
             self.tPeriod += 1
             self.tPeriod %= len(self.sprites)
     def checkCollisions(self):
-        global Score
         for i in aliens:
             if i.x + 50 >= self.x and i.x <= self.x + 15 and i.y + 50 >= self.y \
                and i.y <= self.y + 25:
                 self.dead = True
                 i.hp -= 1
-                Score += 1
                 explosions.append(explosion(self.x + 7.5, self.y))
                 self.explote=PlaySound('invaderkilled.wav',SND_FILENAME|SND_ASYNC)
 
@@ -127,6 +125,7 @@ class enemyBullet(bullet):
 
 class explosion():
     def __init__(self, x, y):
+        global Score
         self.x = x
         self.y = y
         self.sprites = [PhotoImage(file="explosionpurple.gif"),
@@ -191,6 +190,7 @@ class alien():
             self.tPeriod += 1
             self.tPeriod %= len(self.sprites)
     def update(self):
+        global Score
         self.draw()
         self.x += self.xVel
         if self.x <= 0 or self.x + 50 >= disp.winfo_width():
@@ -198,6 +198,7 @@ class alien():
             self.xVel *= -1.15
             self.y += 50
         if self.hp <= 0:
+            Score += 1
             self.dead = True
         if self.t == 3 and self.tPeriod == len(self.sprites) - 1 \
            and self.timer == self.period - 1 \
