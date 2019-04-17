@@ -418,7 +418,12 @@ def drawEnemyBullets():
 p = player(150, 650)
 def startGame():
     global gameState
+    global name
     if len (name) > 0:
+        with open("Usuarios.csv","a", newline = '') as doc_usuarioscsv:
+            csv_data = csv.writer(doc_usuarioscsv)
+            csv_data.writerows([[name]])
+        doc_usuarioscsv.close()
         savename.destroy()
         playbut.destroy()
         textField.config(state=DISABLED)
@@ -429,6 +434,13 @@ def startGame():
         gameState = 1
     else:
         tkinter.messagebox.showinfo(message="Name must have at least 1 character")
+
+def lectura():
+    doc = open("Usuarios.csv","r")
+    documento = csv.reader(doc)
+    for (nombre) in documento:
+        print (nombre)
+    doc.close()
 
 def writeCheatCode(event):
     global cheatCode
@@ -465,12 +477,7 @@ def menu():
 def usuario():
     global name
     global texto
-    texto=data.get()
-    if len (texto) >= 0:
-        name = texto
-    else:
-        messagebox.showinfo(message="Name must have at least 1 character")
-
+    name=data.get()
         
 data = StringVar()
 textField = Entry(disp,textvariable=data)
@@ -485,6 +492,7 @@ def draw():
     disp.delete("all")
     if gameState:
         drawBackground()
+        lectura()
         p.update()
         drawShots()
         drawAliens()
