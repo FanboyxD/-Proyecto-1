@@ -217,7 +217,7 @@ class alien():#se define la clase de los invaders
             self.moveSpeed = 2
             self.hp = 3
 
-        #caso que el tipo no cumpla alas condiciones    
+        #caso que el tipo no cumpla las condiciones    
         self.xVel = self.moveSpeed
         self.timer = 0
         self.tPeriod = 0
@@ -282,21 +282,24 @@ def spawnAliens():#fucion encargada de pasar los parametros de spawn
                     aliens.append(alien(i, j, random.randint(2, 4))) #aparece aliens de tipo 2,3,4 de forma aleatorea
     p.hp = 1 #el jugador "p" tiene como parametro de hp un 1
     wavesSurvived += 1 #cada vez que el ciclo se completa aumenta 1 la variable oleadassobrevividas
-class player():
-    def __init__(self, x, y):
+
+#---------------------------------Clase-Jugador----------------------------------------------------------#
+
+class player(): #Se define la clase jugador 
+    def __init__(self, x, y): #inicia con posicion y su respectivo sprite
         self.x = x
         self.y = y
         self.sprites = [PhotoImage(file="ship.gif"),
                         PhotoImage(file="ship.gif")]
-        self.timer = 0
+        self.timer = 0   #Tiempos para control de la nave
         self.tPeriod = 0
         self.period = 1
-        self.left = False
+        self.left = False  #la nave tiene un estado inicial quieto
         self.right = False
         self.up = False
         self.down = False
-        self.hp = 1
-        self.autofire = False
+        self.hp = 1 #El jugador comienza con un punto de hp
+        # Se definen las teclas que seran usadas para mover al jugador
         disp.bind("<Left>", self.moveLeft)
         disp.bind("<Right>", self.moveRight)
         disp.bind("<KeyRelease-Left>", self.stopLeft)
@@ -306,21 +309,21 @@ class player():
         disp.bind("<KeyRelease-Up>", self.stopUp)
         disp.bind("<KeyRelease-Down>", self.stopDown)
         disp.bind("<KeyRelease-space>", self.spawnBullet)
-        disp.bind("<KeyRelease-Shift_L>", self.toggleAutoFire)
-    def draw(self):
+
+    def draw(self): #funcion que dibuja al jugador 
         disp.create_image(self.x, self.y,
                           image=self.sprites[self.tPeriod],
-                          anchor=NW)
-        self.timer += 1
+                          anchor=NW) #crea la imagen con la posicion dada de x/y
+        self.timer += 1  #cambio de los tiempos
         self.timer %= self.period
         if self.timer == 0:
             self.tPeriod += 1
             self.tPeriod %= len(self.sprites)
         disp.create_text(self.x + 25, self.y - 20, text="HP: " + str(self.hp),
-                         fill="white", font=Fuente2)
-    def update(self):
-        global dead
-        if self.hp > 0:
+                         fill="white", font=Fuente2)  #texto que indica el hp
+    def update(self): #actualizacion del jugador
+        global dead   #llama a la variable dead
+        if self.hp > 0: #movimientos si el jugador tiene hp
             if self.left and self.x >= 0:
                 self.x -= 10
             if self.x < 0:
@@ -337,25 +340,20 @@ class player():
                 self.x = disp.winfo_width() - 50
             if self.y - 50 > disp.winfo_height():
                 self.y = disp.winfo_height() - 50
-            self.draw()
-            if self.tPeriod == 1 and self.timer == 1 and self.autofire:
-                self.spawnBullet(False)
+            self.draw() #llama funcion dibujar
         else:
-            dead = True
-        for i in aliens:
+            dead = True  #si se queda sin hp muere
+        for i in aliens: #menos un punto de hp si toca al invader
             if i.x + 50 >= self.x and i.x <= self.x + 50 and i.y + 50 >= self.y \
                 and i.y <= self.y + 50:
                 self.hp = -1 
-        for j in enemyProjectiles:
+        for j in enemyProjectiles: #menos un punto de hp si es impactado por una bala enemiga
             if j.x + 15 >= self.x and j.x <= self.x + 50 and j.y + 25 >= self.y \
                 and j.y <= self.y + 50:
                 self.hp -= 1
                 j.dead = True
-                if self.hp > 0:
-                    j.yVel *= -1.25
-                    j.y -= 50
-                if self.hp > -1:
-                    explosions.append(explosion(j.x + 7.5, self.y))
+
+    #se definen los eventos de las teclas(movimiento)
     def moveLeft(self, event):
         self.left = True
     def moveRight(self, event):
@@ -372,73 +370,91 @@ class player():
         self.left = False
     def stopRight(self, event):
         self.right = False
-    def spawnBullet(self, event):
-        if self.hp > 0:
+    def spawnBullet(self, event): #funcion que spawnea las balas 
+        if self.hp > 0: #debe tener hp
             global shots
             shots.append(bullet(self.x + 25, self.y, 0, -20))
-            if AtaqueOP:
+            if AtaqueOP: #si esta activado el hack de 3 disparos
                 shots.append(bullet(self.x + 25, self.y, -3, -20))
                 shots.append(bullet(self.x + 25, self.y, 3, -20))
-            if AtaqueOP2:
+            if AtaqueOP2: #si esta activado el hack de rafaga
                 shots.append(bullet(self.x + 25, self.y + 25, 0, -20))
                 shots.append(bullet(self.x + 25, self.y - 25, 0, -20))
                 shots.append(bullet(self.x + 25, self.y - 50, 0, -20))
                 shots.append(bullet(self.x + 25, self.y - 75, 0, -20))
-    def toggleAutoFire(self, event):
-        self.autofire = not self.autofire
-        print(self.autofire)
             
-def drawShots():
+#---------------------------Dibujar-balas-------------------------------------------#
+
+def drawShots(): # funcion que dibuja las balas
     for i in range(len(shots)):
         try:
-            shots[i].update()
+            shots[i].update()# actualiza las balas, en caso de colision la borra
             if shots[i].dead:
                 del shots[i]
         except:
             pass
-def drawAliens():
-    for i in range(len(aliens)):
+
+#--------------------------Dibujar-Aliens--------------------------------------------#
+
+def drawAliens(): #funcion que dibuja aliens
+    for i in range(len(aliens)):#dibuja la cantidad de aliens que haya
         try:
-            aliens[i].update()
+            aliens[i].update() #actualiza aliens, en caso de estar muerto lo borra
             if aliens[i].dead:
                 del aliens[i]
         except:
             pass
+
+#------------------------Dibujar-explosiones-----------------------------------------#
+
 def drawExplosions():
-    for i in range(len(explosions)):
+    for i in range(len(explosions)): #dibuja la cantidad de explosiones que haya
         try:
             explosions[i].draw()
-            if explosions[i].dead:
+            if explosions[i].dead:#elimina las explosiones
                 del explosions[i]
         except:
             pass
+
+#------------------------Dibuja-balas-enemigas---------------------------------------#
+
 def drawEnemyBullets():
-    for i in range(len(enemyProjectiles)):
+    for i in range(len(enemyProjectiles)):# dibuja la cantidad de balas enemigas segun aparescan
         try:
-            enemyProjectiles[i].update()
+            enemyProjectiles[i].update() #actualiza las balas y si colisionan las borra
             if enemyProjectiles[i].dead:
                 del enemyProjectiles[i]
         except:
             pass
+
+#p es el jugador y se indica como la clase player con su posicion
 p = player(150, 650)
-def startGame():
-    global gameState
+
+#--------------------------inicia-el-juego------------------------------------------#
+
+def startGame():  #funcion para iniciar al juego
+    global gameState  #se llama a las variables globales estado del juego y nombre
     global name
-    if len (name) > 0:
-        with open("Usuarios.csv","a", newline = '') as doc_usuarioscsv:
+    if len (name) > 0: #si hay un nombre el juego puede comenzar
+        with open("Usuarios.csv","a", newline = '') as doc_usuarioscsv:# se almacena el nmbre en un csv
             csv_data = csv.writer(doc_usuarioscsv)
             csv_data.writerows([[name]])
-        doc_usuarioscsv.close()
-        savename.place_forget()
+        doc_usuarioscsv.close()#  se cierra el archivo
+
+        savename.place_forget()#se quitan los botones y el cuadro de texto y se desabilita
         playbut.place_forget()
         textField.config(state=DISABLED)
         textField.place_forget()
-        disp.focus_set()
+
+        disp.focus_set() #Nos aseguramos de que el contenedor/canvas reciba las teclas
         disp.bind("<Key>", writeCheatCode)
         disp.bind("<q>", eraseCheatCode)
-        gameState = 1
+
+        gameState = 1 #variable que al estar en 1 inicia el juego
     else:
-        tkinter.messagebox.showinfo(message="Name must have at least 1 character")
+        tkinter.messagebox.showinfo(message="Name must have at least 1 character") #si no hay un nombre establecido no se puede jugar
+
+#-----------------------lee-el-csv-----------------------------------------------------------#
 
 def lectura():
     doc = open("Usuarios.csv","r")
@@ -447,34 +463,41 @@ def lectura():
         print (nombre)
     doc.close()
 
-def writeCheatCode(event):
-    global cheatCode
+#------------------------------Hacks-del-juego------------------------------------------------#
+
+def writeCheatCode(event): #evento que activa el juego
+    global cheatCode #se llaman las variables de los hacks
     global AtaqueOP
     global AtaqueOP2
-    global p
-    cheatCode += event.char
-    if cheatCode == "pra pra pra":
+    global p         #se llama al jugador
+    cheatCode += event.char  #a la variable cheatcode se le une las teclas que el jugador digite
+    if cheatCode == "pra pra pra": #si el hack es igual a la palabra se activa el triple disparo
         AtaqueOP = True
         tkinter.messagebox.showinfo(title="Hack Activado!",
                     message='Has activado el triple disparo.')
-        cheatCode = ""
-    elif cheatCode == "on fire":
+        cheatCode = ""  #el codigo vuelve a estar vacio
+    elif cheatCode == "on fire": #si es igual activa el disparo en rafaga
         AtaqueOP2 = True
-        tkinter.messagebox.showinfo(title="Hax Unlocked!",
+        tkinter.messagebox.showinfo(title="Hack Activado!",
                     message='RAFAGA !!!')
         cheatCode = ""
-    elif cheatCode == "vida extra":
+    elif cheatCode == "hongo verde": #si es igual suma un punto de hp
         p.hp += 1
         cheatCode = ""
-def eraseCheatCode(event):
-    global cheatCode
-    cheatCode = ""
 
-spawnAliens()
+def eraseCheatCode(event): #evento que reinicia lo digitado en el hack
+    global cheatCode
+    cheatCode = "" #al teclear la letra "q" el codigo queda vacio
+
+#----------------------se-dibuja-el-fondo-------------------------------------------#
+
 def drawBackground():
     pass
+
+#----------------------se-crea-el-menu----------------------------------------------#
+
 def menu():
-    disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 - 50,
+    disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 - 50, #titulo y subtitulo
                      text="Space Invaders", fill="white", font=FuenteMenu)
     disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 + 20,
                      text="Create Nick Name", fill="white", font=Fuente2)
