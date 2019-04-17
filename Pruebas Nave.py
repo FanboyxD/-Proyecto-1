@@ -497,53 +497,57 @@ def drawBackground():
 #----------------------se-crea-el-menu----------------------------------------------#
 
 def menu():
-    disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 - 50, #titulo y subtitulo
+    disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 - 50, #titulo y subtitulo + poscicion calculada por el alto y ancho
                      text="Space Invaders", fill="white", font=FuenteMenu)
     disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 + 20,
                      text="Create Nick Name", fill="white", font=Fuente2)
 
-def usuario():
+#----------------------------Usuairio-----------------------------------------------#
+
+def usuario(): #funcion que obtiene el usuario y lo garda en una variable
     global name
     global texto
     name=data.get()
         
-data = StringVar()
-textField = Entry(disp,textvariable=data)
+data = StringVar() #se define que es de tipo str<
+textField = Entry(disp,textvariable=data) #entry para insertar el usuario y poscicion
 textField.place(x=320,y=450)
-savename=Button(disp, text="Set Nick Name",command=usuario)
+savename=Button(disp, text="Set Nick Name",command=usuario) #boton para guardar el usuario y poscicion
 savename.place(x=450,y=450)
-playbut=Button(disp, text=" Play ", font=21, command=startGame)
+playbut=Button(disp, text=" Play ", font=21, command=startGame)#boton para iniciar el juego
 playbut.place(x=350,y=480)
 
-def draw():
-    disp.delete("all")
-    if gameState:
-        drawBackground()
-        p.update()
-        drawShots()
+#----------------------------------dibujado-------------------------------------------#
+
+def draw(): #funcion que dibuja el juego
+    disp.delete("all")#se refrezca lo que aparece en pantalla y borra lo anterior
+    if gameState: #si la variable tiene 1 comienza el juego
+        drawBackground()#se dibuja el fondo
+        p.update() #se actualiza al jugador
+        drawShots() #se dibujan los disparos/aliens/balas enemigas/explosiones
         drawAliens()
         drawEnemyBullets()
         drawExplosions()
         disp.create_text(disp.winfo_width()/2-310, disp.winfo_height()/2-380,
-                             text="Nivel Actual "+str(wavesSurvived), fill="white", font=Fuente2)
+                             text="Nivel Actual "+str(wavesSurvived), fill="white", font=Fuente2) #muestra en que nivel se encuentra el jugador
         disp.create_text(disp.winfo_width()/2-160, disp.winfo_height()/2-380,
-                             text="Score "+ str(Score), fill="White", font=Fuente2)
-        if len(aliens) == 0:
+                             text="Score "+ str(Score), fill="White", font=Fuente2)  #muestra el puntaje en tiempo real
+        if len(aliens) == 0: #en caso de no haber aliens genera mas
             spawnAliens()
-        if wavesSurvived >= 4:
-            disp.delete("all")
+        if wavesSurvived >= 4: #si llega a 4 oleadas significa que gano el juego
+            disp.delete("all") #se elimina todo
             disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2,
-                                 text="You Win", fill="Blue", font=gOver)
-        elif dead:
+                                 text="You Win", fill="Blue", font=gOver) #texto que indica que gano
+        elif dead: #en caso de morir
             disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2,
-                                 text="GAME OVER", fill="red", font=gOver)
+                                 text="GAME OVER", fill="red", font=gOver) #texto que indica "game over"
             disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 + 30,
                              text="ROUNDS SURVIVED: " + str(wavesSurvived),
-                             fill="yellow", font=Fuente2)
-    else:
+                             fill="yellow", font=Fuente2) #texto que muestra cuantas oleadas sobrevivio
+    else: #si no esta la variable gamestate como 1 dibuja el fondo y llama al menu
         drawBackground()
         menu()
-    root.after(25, draw)
-draw()
+    root.after(25, draw) #cada cuanto llama a la funcion(25ms)
+draw() # se llama a la funcion dibujar 
 
-root.mainloop()
+root.mainloop() #se cierra el loop de la ventana 
