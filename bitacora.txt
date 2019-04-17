@@ -35,5 +35,8 @@ Añadimos un texto que muestra el nivel en el que se encuentra el jugador y el s
 16/04/2019
 13:00
 Creamos una opcion para reiniciar el juego
+17:00
+Añadimos un menu que permite introducir el nombre y botones para jugar y establecer el nombre que se guarda en un csv
+Se añadieron comentarios para que el codigo pueda ser entendido con mayor facilidad
 
 
