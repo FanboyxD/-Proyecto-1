@@ -2,30 +2,55 @@
 from tkinter import *
 import random
 import tkinter.font
-from tkinter import messagebox
+import tkinter.messagebox
 import json
 import time
 import csv
-import os
 from winsound import*
 #import os
 
 #-------------------Ventana------------------------------------------------#
-root = Tk()
+root = Tk()#Se crea la ventana/Titulo/Icono de la ventana/No se puede redimencionar
 root.wm_title("Space Invaders NEO")
 root.iconbitmap("SpIn.ico.ico")
 root.resizable(width=False, height=False)
 #-------------------Barra-de-menu------------------------------------------#
-def salir():#Funcion que pregunta si el usuario desea salir del juego
-    pregunta = tkinter.messagebox.askyesno('Salir','''Si desea salir del juego seleccione: si
-Si desea salir al menu seleccione: no''' )
-    if pregunta == True:
-        root.destroy()
-    
 
+def salir(): #Esta funcion pregunta al usuario si desea salir al menu o cerrar el juego
+    pregunta = tkinter.messagebox.askyesnocancel('Salir','''Si desea salir del juego seleccione: si
+Si desea salir al menu seleccione: no''' )#cuadro de dialogo que contiene la pregunta
+
+    if pregunta == True:#si selecciona "si" cierra la ventana
+        root.destroy()
+    elif pregunta == False:#en caso de seleccionar "no" reinicia las variables y lo devuelve al menu principal
+        global gameState
+        gameState = 0
+        global p
+        p = player(400,650)
+        global wavesSurvived
+        wavesSurvived = 0
+        global Score
+        Score = 0
+        global shots
+        shots = []
+        global enemyProjectiles
+        enemyProjectiles = []
+        global aliens
+        aliens = []
+        global explosions
+        explosions = []
+        global AtaqueOP
+        AtaqueOP = False
+        global AtaqueOP2
+        AtaqueOP2 = False
+        global dead
+        dead = False
+
+#si selecciona "Cancelar" simplemente se cierra el cuadro de texto
+    
 def version():#funcion que muestra una ventana emergente con la version del programa
     tkinter.messagebox.showinfo("Space invaders",'''Instituto Tecnologico de Costa Rica
-        Space Invaders v0.5''')
+        Space Invaders v0.5''')#Cuadro de texto con la informacion
 
     
 

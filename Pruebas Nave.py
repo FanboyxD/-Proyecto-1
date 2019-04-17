@@ -31,6 +31,8 @@ Si desea salir al menu seleccione: no''' )#cuadro de dialogo que contiene la pre
         wavesSurvived = 0
         global Score
         Score = 0
+        global name
+        name = []
         global shots
         shots = []
         global enemyProjectiles
@@ -79,6 +81,7 @@ AtaqueOP = False
 AtaqueOP2 = False
 wavesSurvived = 0
 Score = 0
+name=[]
 dead = False
 gOver = tkinter.font.Font(family="Chiller", size=30, weight="bold")#Fuentes utilizadas en el programa
 Fuente2 = tkinter.font.Font(family="OCR-A II", size=14)
@@ -413,9 +416,20 @@ def drawEnemyBullets():
         except:
             pass
 p = player(150, 650)
-def startGame(event):
+def startGame():
     global gameState
-    gameState = 1
+    if len (name) > 0:
+        savename.destroy()
+        playbut.destroy()
+        textField.config(state=DISABLED)
+        textField.destroy()
+        disp.focus_set()
+        disp.bind("<Key>", writeCheatCode)
+        disp.bind("<q>", eraseCheatCode)
+        gameState = 1
+    else:
+        tkinter.messagebox.showinfo(message="Name must have at least 1 character")
+
 def writeCheatCode(event):
     global cheatCode
     global AtaqueOP
@@ -438,11 +452,7 @@ def writeCheatCode(event):
 def eraseCheatCode(event):
     global cheatCode
     cheatCode = ""
-# MAKING SURE THAT THE CANVAS ACTUALLY RECEIVES KEYBOARD INPUT!!!!
-disp.focus_set()
-disp.bind("<Return>", startGame)
-disp.bind("<Key>", writeCheatCode)
-disp.bind("<q>", eraseCheatCode)
+
 spawnAliens()
 def drawBackground():
     pass
@@ -450,7 +460,27 @@ def menu():
     disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 - 50,
                      text="Space Invaders", fill="white", font=FuenteMenu)
     disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 + 20,
-                     text="Press ENTER to start.", fill="white", font=Fuente2)
+                     text="Create Nick Name", fill="white", font=Fuente2)
+
+def usuario():
+    global name
+    global texto
+    texto=data.get()
+    if len (texto) >= 0:
+        name = texto
+    else:
+        messagebox.showinfo(message="Name must have at least 1 character")
+
+        
+data = StringVar()
+textField = Entry(disp,textvariable=data)
+textField.place(x=320,y=450)
+savename=Button(disp, text="Set Nick Name",command=usuario)
+savename.place(x=450,y=450)
+playbut=Button(disp, text=" Play ", font=21, command=startGame)
+playbut.place(x=350,y=480)
+
+
 def draw():
     disp.delete("all")
     if gameState:
