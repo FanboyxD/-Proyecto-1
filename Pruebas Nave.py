@@ -47,6 +47,11 @@ Si desea salir al menu seleccione: no''' )#cuadro de dialogo que contiene la pre
         AtaqueOP2 = False
         global dead
         dead = False
+        playbut.place(x=350,y=480)
+        savename.place(x=450,y=450)
+        textField.place(x=320,y=450)
+        textField.config(state=NORMAL)
+        data.set("")
 
 #si selecciona "Cancelar" simplemente se cierra el cuadro de texto
     
@@ -424,10 +429,10 @@ def startGame():
             csv_data = csv.writer(doc_usuarioscsv)
             csv_data.writerows([[name]])
         doc_usuarioscsv.close()
-        savename.destroy()
-        playbut.destroy()
+        savename.place_forget()
+        playbut.place_forget()
         textField.config(state=DISABLED)
-        textField.destroy()
+        textField.place_forget()
         disp.focus_set()
         disp.bind("<Key>", writeCheatCode)
         disp.bind("<q>", eraseCheatCode)
@@ -487,12 +492,10 @@ savename.place(x=450,y=450)
 playbut=Button(disp, text=" Play ", font=21, command=startGame)
 playbut.place(x=350,y=480)
 
-
 def draw():
     disp.delete("all")
     if gameState:
         drawBackground()
-        lectura()
         p.update()
         drawShots()
         drawAliens()
