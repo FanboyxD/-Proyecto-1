@@ -82,8 +82,8 @@ shots = []
 enemyProjectiles = []
 aliens = []
 explosions = []
-AtaqueOP = False
-AtaqueOP2 = False
+AtaqueOP = True
+AtaqueOP2 = True
 wavesSurvived = 0
 Score = 0
 name=[]
@@ -280,7 +280,6 @@ def spawnAliens():#fucion encargada de pasar los parametros de spawn
             elif wavesSurvived <=2 :#si sobrevive 2 oleadas 
                 if 100<= j <= 300: #condicion para disminuir la cantidas de aliens y en que lugar hacen spawn
                     aliens.append(alien(i, j, random.randint(2, 4))) #aparece aliens de tipo 2,3,4 de forma aleatorea
-    p.hp = 1 #el jugador "p" tiene como parametro de hp un 1
     wavesSurvived += 1 #cada vez que el ciclo se completa aumenta 1 la variable oleadassobrevividas
 
 #---------------------------------Clase-Jugador----------------------------------------------------------#
@@ -517,6 +516,71 @@ savename.place(x=450,y=450)
 playbut=Button(disp, text=" Play ", font=21, command=startGame)#boton para iniciar el juego
 playbut.place(x=350,y=480)
 
+def imprimirscore():
+
+    with open('puntajes.json') as file:
+                scores = json.load(file)
+    disp.create_text(disp.winfo_width()/2, 320,
+                             text=str(scores["Nombres"][0]) +" "+ str(scores["Scores"][0]),fill="yellow", font=Fuente2)
+    disp.create_text(disp.winfo_width()/2, 350,
+                             text=str(scores["Nombres"][1]) +" "+ str(scores["Scores"][1]),fill="yellow", font=Fuente2)
+    disp.create_text(disp.winfo_width()/2, 380,
+                             text=str(scores["Nombres"][2]) +" "+ str(scores["Scores"][2]),fill="yellow", font=Fuente2)
+    disp.create_text(disp.winfo_width()/2, 410,
+                             text=str(scores["Nombres"][3]) +" "+ str(scores["Scores"][3]),fill="yellow", font=Fuente2)
+    disp.create_text(disp.winfo_width()/2, 440,
+                             text=str(scores["Nombres"][4]) +" "+ str(scores["Scores"][4]),fill="yellow", font=Fuente2)
+
+def highscore():
+    with open('puntajes.json') as file:
+        puntajes = json.load(file)
+
+    if Score>puntajes['Scores'][0]:
+
+        puntajes['Scores'] = [Score] + puntajes['Scores'][:-1]
+        puntajes["Nombres"] = [name] + puntajes["Nombres"][:-1]
+        with open('puntajes.json','w') as file:
+            json.dump(puntajes,file)
+    elif Score == puntajes['Scores'][0]:
+        pass
+
+    elif Score>puntajes['Scores'][1]:
+
+        puntajes['Scores'] = puntajes['Scores'][0:1] + [Score] + puntajes['Scores'][1:-1]
+        puntajes["Nombres"] = puntajes["Nombres"][0:1] + [name] + puntajes["Nombres"][1:-1]
+        with open('puntajes.json','w') as file:
+            json.dump(puntajes,file)
+    elif Score == puntajes['Scores'][1]:
+        pass
+
+    elif Score>puntajes['Scores'][2]:
+
+        puntajes['Scores'] = puntajes['Scores'][0:2] + [puntajes] + puntajes['Scores'][2:4]
+        puntajes["Nombres"] = puntajes["Nombres"][0:2] + [name] + puntajes["Nombres"][2:4]
+        with open('puntajes.json','w') as file:
+            json.dump(puntajes,file)
+    elif Score == puntajes['Scores'][2]:
+        pass
+
+    elif Score>puntajes['Scores'][3]:
+
+        puntajes['Scores'] = puntajes['Scores'][0:3] + [Score] + puntajes['Scores'][3:-1]
+        puntajes["Nombres"] = puntajes["Nombres"][0:3] + [name] + puntajes["Nombres"][3:-1]
+        with open('puntajes.json','w') as file:
+            json.dump(puntajes,file)
+    elif Score == puntajes['Scores'][3]:
+        pass
+
+    elif Score>puntajes['Scores'][4]:
+
+        puntajes['Scores'] = puntajes['Scores'][0:4] + [Score]
+        puntajes["Nombres"] = puntajes["Nombres"][0:4] + [name]
+        with open('puntajes.json','w') as file:
+            json.dump(puntajes,file)
+    elif Score == puntajes['Scores'][4]:
+        pass
+
+
 #----------------------------------dibujado-------------------------------------------#
 
 def draw(): #funcion que dibuja el juego
@@ -536,18 +600,27 @@ def draw(): #funcion que dibuja el juego
             spawnAliens()
         if wavesSurvived >= 4: #si llega a 4 oleadas significa que gano el juego
             disp.delete("all") #se elimina todo
-            disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2,
+            disp.create_text(disp.winfo_width()/2, 200,
                                  text="You Win", fill="Blue", font=gOver) #texto que indica que gano
+            disp.create_text(disp.winfo_width()/2, 290,
+                                 text="HIGH SCORES", fill="Blue", font=gOver)
+            highscore()
+            imprimirscore()
+#- - - - - - - - - -muerted del jugador- - - - - - - - - - - - - - - - - - - - - -#
         elif dead: #en caso de morir
-            disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2,
+
+            disp.create_text(disp.winfo_width()/2, 200,
                                  text="GAME OVER", fill="red", font=gOver) #texto que indica "game over"
-            disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 + 30,
+            disp.create_text(disp.winfo_width()/2, 230,
                              text="ROUNDS SURVIVED: " + str(wavesSurvived),
                              fill="yellow", font=Fuente2) #texto que muestra cuantas oleadas sobrevivio
+            disp.create_text(disp.winfo_width()/2, 290,
+                                 text="HIGH SCORES", fill="red", font=gOver)
+            highscore() 
+            imprimirscore()
     else: #si no esta la variable gamestate como 1 dibuja el fondo y llama al menu
         drawBackground()
         menu()
     root.after(25, draw) #cada cuanto llama a la funcion(25ms)
 draw() # se llama a la funcion dibujar 
-
 root.mainloop() #se cierra el loop de la ventana 
