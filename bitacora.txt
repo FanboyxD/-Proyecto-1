@@ -39,4 +39,12 @@ Creamos una opcion para reiniciar el juego
 Añadimos un menu que permite introducir el nombre y botones para jugar y establecer el nombre que se guarda en un csv
 Se añadieron comentarios para que el codigo pueda ser entendido con mayor facilidad
 
+17/04/2019
+14:00 
+se investigan mas afondo los .json
+17:00
+Se logran mostrar los scores en la pantalla final pero aun no se actualizan
 
+18/04/2019
+12:00
+selogra actualizar los scores en la pantalla final
