@@ -435,10 +435,7 @@ def startGame():  #funcion para iniciar al juego
     global gameState  #se llama a las variables globales estado del juego y nombre
     global name
     if len (name) > 0: #si hay un nombre el juego puede comenzar
-        with open("Usuarios.csv","a", newline = '') as doc_usuarioscsv:# se almacena el nmbre en un csv
-            csv_data = csv.writer(doc_usuarioscsv)
-            csv_data.writerows([[name]])
-        doc_usuarioscsv.close()#  se cierra el archivo
+        lectura()
 
         savename.place_forget()#se quitan los botones y el cuadro de texto y se desabilita
         playbut.place_forget()
@@ -456,11 +453,31 @@ def startGame():  #funcion para iniciar al juego
 #-----------------------lee-el-csv-----------------------------------------------------------#
 
 def lectura():
+    global name
     doc = open("Usuarios.csv","r")
     documento = csv.reader(doc)
-    for (nombre) in documento:
-        print (nombre)
+    documento2=list(documento)
     doc.close()
+    comprobar_user(name,documento2,0)
+
+#---------------------Se comprueba-el-usuario-------------------------------------------------#
+
+def comprobar_user(name,documento2,i):
+    if i == len(documento2):
+        escritura()
+    elif [name] == documento2[i]:
+        pass
+    else:
+        comprobar_user(name,documento2,i+1)
+
+#---------------------Se-guarda-el-usuario-si-no-esta-------------------------------------------#
+
+def escritura():
+
+    with open("Usuarios.csv","a", newline = '') as doc_usuarioscsv:
+        csv_data = csv.writer(doc_usuarioscsv)
+        csv_data.writerows([[name]])
+    doc_usuarioscsv.close()
 
 #------------------------------Hacks-del-juego------------------------------------------------#
 
