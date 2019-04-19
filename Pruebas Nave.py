@@ -128,6 +128,7 @@ class bullet(threading.Thread):#se define la clase bullet que son las balas del 
                 self.dead = True #en caso de colisionar la bala deja de existir
                 i.hp -= 1 #se resta un punto de vida a los aliens
                 explosions.append(explosion(self.x + 7.5, self.y)) #se llama a la animacion de explosion con los parametros indicados
+                self.explote=PlaySound('invaderkilled.wav',SND_FILENAME|SND_ASYNC) #sonido que se reproduce cuando la bala colisiona
 
     def update(self):#Actualizacion del estado de la bala
         self.draw()#llama a la funcion que dibuja la bala
@@ -147,10 +148,10 @@ class bullet(threading.Thread):#se define la clase bullet que son las balas del 
 class enemyBullet(bullet): #Clase para las balas enemigas
     def __init__(self, x, y, xVel, yVel, shotDown): #posicion eje x/y velocidad y si es derribado
         super().__init__(x, y, xVel, yVel)
-        self.shotDown = shotDown
+        self.shotDown = shotDown #si el objeto puede ser derribado usa los siguientes sprites
         self.sprites = [PhotoImage(file="asteroid.gif"),
                         PhotoImage(file="asteroid.gif")]
-        if not self.shotDown: #en caso de no haber sido derribada la bala se dibujan los sprites
+        if not self.shotDown: #si el objeto no puede ser derribado usa los siguientes sprites
             self.sprites = [PhotoImage(file="AlienBullet1.gif"),
                             PhotoImage(file="AlienBullet2.gif"),
                             PhotoImage(file="AlienBullet3.gif")]
@@ -161,7 +162,7 @@ class enemyBullet(bullet): #Clase para las balas enemigas
                 if i.x + 15 >= self.x and i.x <= self.x + 15 and i.y + 25 >= self.y \
                 and i.y <= self.y + 25:
                     Score += 1 #suma 1 punto por destruir asteroide
-                    self.dead = True #la bala desaparece 
+                    self.dead = True #el objeto desaparece
                     j.dead = True
                     explosions.append(explosion(self.x + 7.5, self.y + 12.5)) #se llama a la funcion explosion con los parametros indicados
 
@@ -171,7 +172,6 @@ class explosion(): #clase de las explociones
         self.y = y
         self.sprites = [PhotoImage(file="explosionpurple.gif"), #se crean los sprites de la explosion
                         PhotoImage(file="explosionpurple.gif")]
-        self.explote=PlaySound('invaderkilled.wav',SND_FILENAME|SND_ASYNC) #sonido que se reproduce cuando la bala colisiona
         self.timer = 0
 
     def draw(self): #funcion encargada de dibujar las explosiones
@@ -270,7 +270,7 @@ class alien(threading.Thread):#se define la clase de los invaders
                 enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 4,
                                                     False))
 
-#-----------------------------------Spawn de invaders/aliens------------------------------------#
+#-----------------------------------Spawn de invaders/aliens-------------------------------------------------#
 
 def spawnAliens():#fucion encargada de pasar los parametros de spawn
     global wavesSurvived #llama la variable oleadas sobrevividas
@@ -467,32 +467,27 @@ def startGame():  #funcion para iniciar al juego
 
 #-----------------------lee-el-csv-----------------------------------------------------------#
 
-def lectura():
+def lectura(): #funcion que lee el documento para la revision del usuario
     global name
-    doc = open("Usuarios.csv","r")
-    documento = csv.reader(doc)
+    doc = open("Usuarios.csv","r") #se abre el doc
+    documento = csv.reader(doc) #se lee
     documento2=list(documento)
-    doc.close()
-    comprobar_user(name,documento2,0)
+    doc.close()# se cierra el doc
+    comprobar_user(name,documento2,0)#se llama a la funcion comprobar
 
 #---------------------Se comprueba-el-usuario-------------------------------------------------#
 
-def comprobar_user(name,documento2,i):
-    if i == len(documento2):
-        escritura()
+def comprobar_user(name,documento2,i): #funcion que comprueba si el usuario ya se encuentra en el doc
+#se utiliza un programa de recursion realizado en practicas anteriores
+    if i == len(documento2): # si no lo encuentra lo guarda
+        with open("Usuarios.csv","a", newline = '') as doc_usuarioscsv:
+            csv_data = csv.writer(doc_usuarioscsv)
+            csv_data.writerows([[name]])
+        doc_usuarioscsv.close() 
     elif [name] == documento2[i]:
-        pass
+        pass #si se encuentra el usuario no lo guarda pero igual se utiliza para el puntaje
     else:
-        comprobar_user(name,documento2,i+1)
-
-#---------------------Se-guarda-el-usuario-si-no-esta-------------------------------------------#
-
-def escritura():
-
-    with open("Usuarios.csv","a", newline = '') as doc_usuarioscsv:
-        csv_data = csv.writer(doc_usuarioscsv)
-        csv_data.writerows([[name]])
-    doc_usuarioscsv.close()
+        comprobar_user(name,documento2,i+1) #recursion
 
 #------------------------------Hacks-del-juego------------------------------------------------#
 
@@ -548,68 +543,72 @@ savename.place(x=450,y=450)
 playbut=Button(disp, text=" Play ", font=21, command=startGame)#boton para iniciar el juego
 playbut.place(x=350,y=480)
 
+#--------------------------------------------imprime-los-highscores-----------------------------#
+
 def imprimirscore():
 
-    with open('puntajes.json') as file:
+    with open('puntajes.json') as file:   #abre el doc de puntajes
                 scores = json.load(file)
-    disp.create_text(disp.winfo_width()/2, 320,
-                             text=str(scores["Nombres"][0]) +" "+ str(scores["Scores"][0]),fill="yellow", font=Fuente2)
+    disp.create_text(disp.winfo_width()/2, 320, 
+                             text=str(scores["Nombres"][0]) +" "+ str(scores["Scores"][0]),fill="yellow", font=Fuente2) #crea un texto con el jugador con el punteje mas alto
     disp.create_text(disp.winfo_width()/2, 350,
-                             text=str(scores["Nombres"][1]) +" "+ str(scores["Scores"][1]),fill="yellow", font=Fuente2)
+                             text=str(scores["Nombres"][1]) +" "+ str(scores["Scores"][1]),fill="yellow", font=Fuente2) #segundo puntaje mas alto
     disp.create_text(disp.winfo_width()/2, 380,
-                             text=str(scores["Nombres"][2]) +" "+ str(scores["Scores"][2]),fill="yellow", font=Fuente2)
+                             text=str(scores["Nombres"][2]) +" "+ str(scores["Scores"][2]),fill="yellow", font=Fuente2)  #tercer puntaje mas alto
     disp.create_text(disp.winfo_width()/2, 410,
-                             text=str(scores["Nombres"][3]) +" "+ str(scores["Scores"][3]),fill="yellow", font=Fuente2)
+                             text=str(scores["Nombres"][3]) +" "+ str(scores["Scores"][3]),fill="yellow", font=Fuente2)  #cuarto mas alto
     disp.create_text(disp.winfo_width()/2, 440,
-                             text=str(scores["Nombres"][4]) +" "+ str(scores["Scores"][4]),fill="yellow", font=Fuente2)
+                             text=str(scores["Nombres"][4]) +" "+ str(scores["Scores"][4]),fill="yellow", font=Fuente2)  #quinto mas alto
 
-def highscore():
-    with open('puntajes.json') as file:
+#-------------------------------------------se-guardan-los-scores-----------------------------------------------#
+
+def highscore(): #funcion que comprueba si se deben guardar
+    with open('puntajes.json') as file: #abre el doc
         puntajes = json.load(file)
 
-    if Score>puntajes['Scores'][0]:
+    if Score>puntajes['Scores'][0]: #si el puntaje es mayor al mas alto lo guarda y corre todos un espacio sacando al quinto
 
         puntajes['Scores'] = [Score] + puntajes['Scores'][:-1]
         puntajes["Nombres"] = [name] + puntajes["Nombres"][:-1]
         with open('puntajes.json','w') as file:
             json.dump(puntajes,file)
-    elif Score == puntajes['Scores'][0]:
+    elif Score == puntajes['Scores'][0]: #si es igual no lo guarda 
         pass
 
-    elif Score>puntajes['Scores'][1]:
+    elif Score>puntajes['Scores'][1]: #si es mayor al segundo deja al primero y corre los demas un espacio
 
         puntajes['Scores'] = puntajes['Scores'][0:1] + [Score] + puntajes['Scores'][1:-1]
         puntajes["Nombres"] = puntajes["Nombres"][0:1] + [name] + puntajes["Nombres"][1:-1]
         with open('puntajes.json','w') as file:
             json.dump(puntajes,file)
-    elif Score == puntajes['Scores'][1]:
+    elif Score == puntajes['Scores'][1]: #si es igual no lo guarda
         pass
 
-    elif Score>puntajes['Scores'][2]:
+    elif Score>puntajes['Scores'][2]: #si es mayor al tercero deja el 1 y 2 y corre los demas un espacio
 
         puntajes['Scores'] = puntajes['Scores'][0:2] + [Score] + puntajes['Scores'][2:-1]
         puntajes["Nombres"] = puntajes["Nombres"][0:2] + [name] + puntajes["Nombres"][2:-1]
         with open('puntajes.json','w') as file:
             json.dump(puntajes,file)
-    elif Score == puntajes['Scores'][2]:
+    elif Score == puntajes['Scores'][2]: #si es igual no lo guarda
         pass
 
-    elif Score>puntajes['Scores'][3]:
+    elif Score>puntajes['Scores'][3]: #si es mayor al cuarto deja los primeros y corre un espacio
 
         puntajes['Scores'] = puntajes['Scores'][0:3] + [Score] + puntajes['Scores'][3:-1]
         puntajes["Nombres"] = puntajes["Nombres"][0:3] + [name] + puntajes["Nombres"][3:-1]
         with open('puntajes.json','w') as file:
             json.dump(puntajes,file)
-    elif Score == puntajes['Scores'][3]:
+    elif Score == puntajes['Scores'][3]: #si es igual no lo guarda
         pass
 
-    elif Score>puntajes['Scores'][4]:
+    elif Score>puntajes['Scores'][4]: #si es mayor al ultimo lo reemplaza
 
         puntajes['Scores'] = puntajes['Scores'][0:4] + [Score]
         puntajes["Nombres"] = puntajes["Nombres"][0:4] + [name]
         with open('puntajes.json','w') as file:
             json.dump(puntajes,file)
-    elif Score == puntajes['Scores'][4]:
+    elif Score == puntajes['Scores'][4]:#si es igual no se guarda
         pass
 
 
@@ -635,9 +634,9 @@ def draw(): #funcion que dibuja el juego
             disp.create_text(disp.winfo_width()/2, 200,
                                  text="You Win", fill="Blue", font=gOver) #texto que indica que gano
             disp.create_text(disp.winfo_width()/2, 290,
-                                 text="HIGH SCORES", fill="Blue", font=gOver)
-            highscore()
-            imprimirscore()
+                                 text="HIGH SCORES", fill="Blue", font=gOver) #titulo high scores
+            highscore() #llama a la funcion que guarda los scores
+            imprimirscore() #funcion que imprime los scores
 #- - - - - - - - - -muerted del jugador- - - - - - - - - - - - - - - - - - - - - -#
         elif dead: #en caso de morir
 
@@ -647,12 +646,12 @@ def draw(): #funcion que dibuja el juego
                              text="ROUNDS SURVIVED: " + str(wavesSurvived),
                              fill="yellow", font=Fuente2) #texto que muestra cuantas oleadas sobrevivio
             disp.create_text(disp.winfo_width()/2, 290,
-                                 text="HIGH SCORES", fill="red", font=gOver)
-            highscore() 
-            imprimirscore()
+                                 text="HIGH SCORES", fill="red", font=gOver)#titulo highscores
+            highscore() #funcion guarda scores
+            imprimirscore() #imprime los scores
     else: #si no esta la variable gamestate como 1 dibuja el fondo y llama al menu
         drawBackground()
-        menu()
+        menu() #llama al menu
     root.after(25, draw) #cada cuanto llama a la funcion(25ms)
 draw() # se llama a la funcion dibujar 
 root.mainloop() #se cierra el loop de la ventana 
