@@ -54,3 +54,4 @@ Se logro comprobar si el usuario ya estaba guardado y si no se guarda
 21:00
 Se agregaron asteroides al videojuego
 Se investigó sobre threads y se lograron implementar en el programa
+También se añadieron spawns de las balas enemigas
