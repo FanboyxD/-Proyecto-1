@@ -572,8 +572,8 @@ def highscore():
 
     elif Score>puntajes['Scores'][2]:
 
-        puntajes['Scores'] = puntajes['Scores'][0:2] + [puntajes] + puntajes['Scores'][2:4]
-        puntajes["Nombres"] = puntajes["Nombres"][0:2] + [name] + puntajes["Nombres"][2:4]
+        puntajes['Scores'] = puntajes['Scores'][0:2] + [Score] + puntajes['Scores'][2:-1]
+        puntajes["Nombres"] = puntajes["Nombres"][0:2] + [name] + puntajes["Nombres"][2:-1]
         with open('puntajes.json','w') as file:
             json.dump(puntajes,file)
     elif Score == puntajes['Scores'][2]:
