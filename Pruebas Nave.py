@@ -7,6 +7,7 @@ import json
 import time
 import csv
 from winsound import*
+import threading
 #import os
 
 #-------------------Ventana------------------------------------------------#
@@ -96,15 +97,17 @@ cheatCode = ""
 
 #--------------------Clase-balas-----------------------------------#
 
-class bullet():#se define la clase bullet que son las balas del jugador
+class bullet(threading.Thread):#se define la clase bullet que son las balas del jugador
     def __init__(self, x, y, xVel, yVel):#Se inicia segun los parametros posicion (x,y) y velocidad en eje x/y
+        threading.Thread.__init__(self, name="bullet",target=bullet.draw,args=(self))
+        threading.Thread.__init__(self, name="bullet",target=bullet.checkCollisions,args=(self))
+        threading.Thread.__init__(self, name="bullet",target=bullet.update,args=(self))
         self.x = x
         self.y = y
         self.xVel = xVel
         self.yVel = yVel
         self.sprites = [PhotoImage(file="laser.gif"),#se define cuales seran los sprites de la bala
                         PhotoImage(file="laser.gif")]
-        self.playmusic = PlaySound('shoot.wav',SND_FILENAME|SND_ASYNC)#sonido que se reproduce al disparar
         self.timer = 0  #Tiempo y periodo para el control de las balas
         self.tPeriod = 0
         self.period = 5
@@ -146,20 +149,22 @@ class enemyBullet(bullet): #Clase para las balas enemigas
     def __init__(self, x, y, xVel, yVel, shotDown): #posicion eje x/y velocidad y si es derribado
         super().__init__(x, y, xVel, yVel)
         self.shotDown = shotDown
+        self.sprites = [PhotoImage(file="asteroid.gif"),
+                        PhotoImage(file="asteroid.gif")]
         if not self.shotDown: #en caso de no haber sido derribada la bala se dibujan los sprites
             self.sprites = [PhotoImage(file="AlienBullet1.gif"),
                             PhotoImage(file="AlienBullet2.gif"),
                             PhotoImage(file="AlienBullet3.gif")]
     def checkCollisions(self):
-
+        global Score
         if self.shotDown: #en caso de derribar la bala
             for i in shots:
                 if i.x + 15 >= self.x and i.x <= self.x + 15 and i.y + 25 >= self.y \
                 and i.y <= self.y + 25:
+                    Score += 1 #suma 1 punto por destruir asteroide
                     self.dead = True #la bala desaparece 
                     j.dead = True
                     explosions.append(explosion(self.x + 7.5, self.y + 12.5)) #se llama a la funcion explosion con los parametros indicados
-            
 
 class explosion(): #clase de las explociones
     def __init__(self, x, y): #se inicializa con la posicion x/y 
@@ -179,8 +184,10 @@ class explosion(): #clase de las explociones
 
 #---------------------------clase-aliens-------------------------------------------------------------------------------#
 
-class alien():#se define la clase de los invaders
+class alien(threading.Thread):#se define la clase de los invaders
     def __init__(self, x, y, t): #inicia con posicion x/y y el tipo de alien
+        threading.Thread.__init__(self,name="alien",target=alien.draw,args=(self))
+        threading.Thread.__init__(self,name="alien",target=alien.update,args=(self))
         self.x = x
         self.y = y
         self.t = t
@@ -188,14 +195,14 @@ class alien():#se define la clase de los invaders
         if self.t == 1:
             self.sprites = [PhotoImage(file="invader.gif"),
                             PhotoImage(file="enemy1_2.gif")]
-            self.period = 15
+            self.period = 30
             self.moveSpeed = 3
             self.hp = 1
         # alien de 3 hits o hp, no ataca al jugador
         if self.t == 2:
             self.sprites = [PhotoImage(file="enemy2_1.gif"),
                             PhotoImage(file="enemy2_2.gif")]
-            self.period = 12
+            self.period = 35
             self.moveSpeed = 3
             self.hp = 3
 
@@ -203,9 +210,9 @@ class alien():#se define la clase de los invaders
         if self.t == 3:
             self.sprites = [PhotoImage(file="enemy3_1.gif"),
                             PhotoImage(file="enemy3_2.gif")]
-            self.period = 6
+            self.period = 30
             self.hp = 1
-            self.period = 7
+            self.period = 25
             self.moveSpeed = 2
             self.hp = 1
 
@@ -213,7 +220,7 @@ class alien():#se define la clase de los invaders
         if self.t == 4:
             self.sprites = [PhotoImage(file="Missile Alien.gif"),
                             PhotoImage(file="Missile Alien.gif")]
-            self.period = 7
+            self.period = 25
             self.moveSpeed = 2
             self.hp = 3
 
@@ -241,30 +248,21 @@ class alien():#se define la clase de los invaders
             self.xVel *= -1.15
             self.y += 50
         if self.hp <= 0: #si la vida del alien es 0 o menor
-        #aumenta 1 punto el score y el invader muere
-            Score += 1
+        #aumenta 5 puntos el score y el invader muere
+            Score += 5
             self.dead = True
-        if self.t == 3 and self.tPeriod == len(self.sprites) - 1 \
+        if self.t >= 3 and self.tPeriod == len(self.sprites) - 1 \
            and self.timer == self.period - 1 \
-           and random.random() < 0.3: #si el alien es de tipo 3 dispara de manera random
-            enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 7,
+           and random.random() < 20: #si el alien es de tipo 3 dispara de manera random
+            enemyProjectiles.append(enemyBullet(self.x + 50, self.y + 50, 0, 7,
                                                 False)) #llama a la funcion de balas enemigas
-        if self.t == 4 and self.tPeriod == len(self.sprites) - 1 and \
+        if self.t >= 1 and self.tPeriod == len(self.sprites) - 1 and \
            self.timer == 0: #si es de tipo 4 tiene varios tipos de disparos y de manera random
-            if random.random() < 0.3:
-                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 1, 7,
-                                                    True))
-                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, -1, 7,
-                                                    True))
-                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 7,
-                                                    True))
-            elif random.random() < 0.7:
-                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 7,
-                                                    True))
-                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 25, 0, 7,
+            if random.random() < 10:
+                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 4,
                                                     True))
             else:
-                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 7,
+                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 4,
                                                     False))
 
 #-----------------------------------Spawn de invaders/aliens------------------------------------#
@@ -284,8 +282,10 @@ def spawnAliens():#fucion encargada de pasar los parametros de spawn
 
 #---------------------------------Clase-Jugador----------------------------------------------------------#
 
-class player(): #Se define la clase jugador 
+class player(threading.Thread): #Se define la clase jugador 
     def __init__(self, x, y): #inicia con posicion y su respectivo sprite
+        threading.Thread.__init__(self,name="player",target=player.draw,args=(self))
+        threading.Thread.__init__(self,name="player",target=player.update,args=(self))
         self.x = x
         self.y = y
         self.sprites = [PhotoImage(file="ship.gif"),
@@ -369,7 +369,8 @@ class player(): #Se define la clase jugador
         self.left = False
     def stopRight(self, event):
         self.right = False
-    def spawnBullet(self, event): #funcion que spawnea las balas 
+    def spawnBullet(self, event): #funcion que spawnea las balas
+        self.playmusic = PlaySound('shoot.wav',SND_FILENAME|SND_ASYNC)#sonido que se reproduce al disparar
         if self.hp > 0: #debe tener hp
             global shots
             shots.append(bullet(self.x + 25, self.y, 0, -20))
@@ -392,7 +393,9 @@ def drawShots(): # funcion que dibuja las balas
                 del shots[i]
         except:
             pass
-
+t1 = threading.Thread(name = "hilo1", target = drawShots, args=())
+t1.start()#comienza hilo1
+t1.join()#termina hilo1
 #--------------------------Dibujar-Aliens--------------------------------------------#
 
 def drawAliens(): #funcion que dibuja aliens
@@ -403,7 +406,9 @@ def drawAliens(): #funcion que dibuja aliens
                 del aliens[i]
         except:
             pass
-
+t2 = threading.Thread(name = "hilo2", target = drawAliens, args=())
+t2.start()#comienza hilo3
+t2.join()#termina hilo2
 #------------------------Dibujar-explosiones-----------------------------------------#
 
 def drawExplosions():
@@ -414,7 +419,9 @@ def drawExplosions():
                 del explosions[i]
         except:
             pass
-
+t3 = threading.Thread(name = "hilo3", target = drawExplosions, args=())
+t3.start()#comienza hilo3
+t3.join()#termina hilo3
 #------------------------Dibuja-balas-enemigas---------------------------------------#
 
 def drawEnemyBullets():
@@ -428,6 +435,9 @@ def drawEnemyBullets():
 
 #p es el jugador y se indica como la clase player con su posicion
 p = player(150, 650)
+t4 = threading.Thread(name = "hilo4", target = drawEnemyBullets, args=())
+t4.start()#comienza hilo4
+t4.join()#termina hilo4
 
 #--------------------------inicia-el-juego------------------------------------------#
 
