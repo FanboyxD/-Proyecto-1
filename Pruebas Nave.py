@@ -128,7 +128,6 @@ class bullet(threading.Thread):#se define la clase bullet que son las balas del 
                 self.dead = True #en caso de colisionar la bala deja de existir
                 i.hp -= 1 #se resta un punto de vida a los aliens
                 explosions.append(explosion(self.x + 7.5, self.y)) #se llama a la animacion de explosion con los parametros indicados
-                self.explote=PlaySound('invaderkilled.wav',SND_FILENAME|SND_ASYNC) #sonido que se reproduce cuando la bala colisiona
 
     def update(self):#Actualizacion del estado de la bala
         self.draw()#llama a la funcion que dibuja la bala
@@ -172,6 +171,7 @@ class explosion(): #clase de las explociones
         self.y = y
         self.sprites = [PhotoImage(file="explosionpurple.gif"), #se crean los sprites de la explosion
                         PhotoImage(file="explosionpurple.gif")]
+        self.explote=PlaySound('invaderkilled.wav',SND_FILENAME|SND_ASYNC) #sonido que se reproduce cuando la bala colisiona
         self.timer = 0
 
     def draw(self): #funcion encargada de dibujar las explosiones
