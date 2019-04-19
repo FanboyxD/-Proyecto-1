@@ -47,4 +47,7 @@ Se logran mostrar los scores en la pantalla final pero aun no se actualizan
 
 18/04/2019
 12:00
-selogra actualizar los scores en la pantalla final
+se logra actualizar los scores en la pantalla final
+17:00
+se arregal una linea del score
+se logro comprobar si el usuario ya estaba guardado y si no se guarda
