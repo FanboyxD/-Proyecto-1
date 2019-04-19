@@ -47,7 +47,10 @@ Se logran mostrar los scores en la pantalla final pero aun no se actualizan
 
 18/04/2019
 12:00
-se logra actualizar los scores en la pantalla final
+Se logra actualizar los scores en la pantalla final
 17:00
-se arregal una linea del score
-se logro comprobar si el usuario ya estaba guardado y si no se guarda
+Se arregal una linea del score
+Se logro comprobar si el usuario ya estaba guardado y si no se guarda
+21:00
+Se agregaron asteroides al videojuego
+Se investigó sobre threads y se lograron implementar en el programa
