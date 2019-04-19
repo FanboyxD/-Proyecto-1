@@ -157,7 +157,7 @@ class enemyBullet(bullet): #Clase para las balas enemigas
                             PhotoImage(file="AlienBullet3.gif")]
     def checkCollisions(self):
         global Score
-        if self.shotDown: #en caso de derribar la bala
+        if self.shotDown: #si el objeto puede ser derribado
             for i in shots:
                 if i.x + 15 >= self.x and i.x <= self.x + 15 and i.y + 25 >= self.y \
                 and i.y <= self.y + 25:
@@ -195,14 +195,14 @@ class alien(threading.Thread):#se define la clase de los invaders
         if self.t == 1:
             self.sprites = [PhotoImage(file="invader.gif"),
                             PhotoImage(file="enemy1_2.gif")]
-            self.period = 30
+            self.period = 60
             self.moveSpeed = 3
             self.hp = 1
         # alien de 3 hits o hp, no ataca al jugador
         if self.t == 2:
             self.sprites = [PhotoImage(file="enemy2_1.gif"),
                             PhotoImage(file="enemy2_2.gif")]
-            self.period = 35
+            self.period = 55
             self.moveSpeed = 3
             self.hp = 3
 
@@ -210,9 +210,9 @@ class alien(threading.Thread):#se define la clase de los invaders
         if self.t == 3:
             self.sprites = [PhotoImage(file="enemy3_1.gif"),
                             PhotoImage(file="enemy3_2.gif")]
-            self.period = 30
+            self.period = 40
             self.hp = 1
-            self.period = 25
+            self.period = 38
             self.moveSpeed = 2
             self.hp = 1
 
@@ -220,7 +220,7 @@ class alien(threading.Thread):#se define la clase de los invaders
         if self.t == 4:
             self.sprites = [PhotoImage(file="Missile Alien.gif"),
                             PhotoImage(file="Missile Alien.gif")]
-            self.period = 25
+            self.period = 22
             self.moveSpeed = 2
             self.hp = 3
 
@@ -251,15 +251,20 @@ class alien(threading.Thread):#se define la clase de los invaders
         #aumenta 5 puntos el score y el invader muere
             Score += 5
             self.dead = True
-        if self.t >= 3 and self.tPeriod == len(self.sprites) - 1 \
+        if self.t == 3 and self.tPeriod == len(self.sprites) - 1 \
            and self.timer == self.period - 1 \
            and random.random() < 20: #si el alien es de tipo 3 dispara de manera random
             enemyProjectiles.append(enemyBullet(self.x + 50, self.y + 50, 0, 7,
                                                 False)) #llama a la funcion de balas enemigas
-        if self.t >= 1 and self.tPeriod == len(self.sprites) - 1 and \
+        if self.t == 1 and self.tPeriod == len(self.sprites) - 1 \
+           and self.timer == self.period - 1 \
+           and random.random() < 8: #si el alien es de tipo 3 dispara de manera random
+            enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 7,
+                                                True))
+        if self.t == 4 and self.tPeriod == len(self.sprites) - 1 and \
            self.timer == 0: #si es de tipo 4 tiene varios tipos de disparos y de manera random
-            if random.random() < 10:
-                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 4,
+            if random.random() < 0.1:
+                enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 1, 7,
                                                     True))
             else:
                 enemyProjectiles.append(enemyBullet(self.x + 25, self.y + 50, 0, 4,
