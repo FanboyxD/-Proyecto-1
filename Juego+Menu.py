@@ -84,10 +84,6 @@ menuFont = tkinter.font.Font(family="Fixedsys", size=30)
 gameState = 0
 cheatCode = ""
 
-def load_img(name):
-    path=os.path.join("imgs",name)
-    img = PhotoImage(file=path)
-    return img
 
 
 
