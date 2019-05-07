@@ -24,18 +24,24 @@ def salir(): #Esta funcion pregunta al usuario si desea salir al menu o cerrar e
         root.destroy()
 
 
-def imprimirscore(): #Se crea una ventana que muestra los scores mas altos(work-in-progress) 
+def imprimirscore(): #Se crea una ventana que muestra los scores mas altos(work-in-progress)
+    auxiliar=Tk()
+    auxiliar.wm_title("Dakar Death")
+    auxiliar.resizable(width=False, height=False)
+    aux2 = Canvas(auxiliar, width=200, height=200, bg="black")
+    aux2.grid(row=0, column=0)
+
     with open('puntajes.json') as file:   #abre el doc de puntajes
                 scores = json.load(file)
-    disp.create_text(disp.winfo_width()/2, 320, 
+    aux2.create_text(100, 40, 
                              text=str(scores["Nombres"][0]) +" "+ str(scores["Scores"][0]),fill="yellow", font=Fuente2) #crea un texto con el jugador con el punteje mas alto
-    disp.create_text(disp.winfo_width()/2, 350,
+    aux2.create_text(100, 70,
                              text=str(scores["Nombres"][1]) +" "+ str(scores["Scores"][1]),fill="yellow", font=Fuente2) #segundo puntaje mas alto
-    disp.create_text(disp.winfo_width()/2, 380,
+    aux2.create_text(100, 100,
                              text=str(scores["Nombres"][2]) +" "+ str(scores["Scores"][2]),fill="yellow", font=Fuente2)  #tercer puntaje mas alto
-    disp.create_text(disp.winfo_width()/2, 410,
+    aux2.create_text(100, 130,
                              text=str(scores["Nombres"][3]) +" "+ str(scores["Scores"][3]),fill="yellow", font=Fuente2)  #cuarto mas alto
-    disp.create_text(disp.winfo_width()/2, 440,
+    aux2.create_text(100, 160,
                              text=str(scores["Nombres"][4]) +" "+ str(scores["Scores"][4]),fill="yellow", font=Fuente2)
 
 menubar = Menu(root)#Se crea la barra de menu
@@ -56,7 +62,7 @@ disp.grid(row=0, column=0)
 
 gameState = 0
 gOver = tkinter.font.Font(family="Chiller", size=30, weight="bold")#Fuentes utilizadas en el programa
-Fuente2 = tkinter.font.Font(family="OCR-A II", size=14)
+Fuente2 = tkinter.font.Font(family="OCR-A II", size=20)
 FuenteMenu = tkinter.font.Font(family="Fixedsys", size=50)
 
 
