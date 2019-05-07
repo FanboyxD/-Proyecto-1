@@ -1,0 +1,9 @@
+06/05/2019
+19:00 - 21:00
+Se crea un nuevo menu usando como referencia el menu del proyecto anterior. Además se agrega un submenu en la pestaña "file"
+llamado "Highscores" que abre una ventana la cual muestra los puntajes mas altos
+
+07/05/2019
+14:00
+Investigamos acerca de los sockets e hicimos un programa de chat como ejemplo para el entendimiento de los sockets unido a los hilos. 
+Se investiga sobre como podemos crear una ventana en pygame y que pueda mover el "background" que tiene un tamaño más grande que la ventana
