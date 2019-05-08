@@ -20,7 +20,9 @@ while True:
     if clock() > nextFrame:                         # We only animate our character every 80ms.
         frame = (frame+1)%8                         # There are 8 frames of animation in each direction
         nextFrame += 80                             # so the modulus 8 allows it to loop
-
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit(0)
     if keyPressed("right"):
         changeSpriteImage(testSprite, 0*8+frame)    # 0*8 because right animations are the 0th set in the sprite sheet
         scrollBackground(-5,0)                      # The player is moving right, so we scroll the background left
@@ -42,5 +44,4 @@ while True:
 
     updateDisplay()
     tick(120)
-
 endWait()
