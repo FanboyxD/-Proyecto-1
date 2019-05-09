@@ -4,8 +4,7 @@ import random
 import tkinter.font
 import tkinter.messagebox
 import json
-from pygame_functions import *
-
+import game
 
 #-------------------------Ventana del menu(tkinter)------------------#
 root = Tk()
@@ -108,54 +107,23 @@ savename.place(x=450,y=450)
 playbut=Button(disp, text=" READY ", font=21, command=startGame)#boton para iniciar el juego
 playbut.place(x=350,y=480)
 
+def reset():
+    global gameState
+    gameState = 0
+    playbut.place(x=350,y=480)
+    savename.place(x=450,y=450)
+    textField.place(x=320,y=450)
+    textField.config(state=NORMAL)
+    data.set("")    
+
 def draw():
     disp.delete("all")
-    if gameState:
+    if gameState == 1:
         root.withdraw()
-        screenSize(600,600)
-        setAutoUpdate(False)
-
-        setBackgroundImage( [  ["images/Map 1.png", "images/Map 2.png"] ,
-                               ["images/Map 3.png", "images/Map 4.png"]  ])
-
-        testSprite  = makeSprite("images/links.gif",32)  # links.gif contains 32 separate frames of animation. Sizes are automatically calculated.
-
-        moveSprite(testSprite,300,300,True)
-
-        showSprite(testSprite)
-
-        nextFrame = clock()
-        frame=0
-        while True:
-            if clock() > nextFrame:                         # We only animate our character every 80ms.
-                frame = (frame+1)%8                         # There are 8 frames of animation in each direction
-                nextFrame += 80                             # so the modulus 8 allows it to loop
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    sys.exit(0)
-
-            if keyPressed("right"):
-                changeSpriteImage(testSprite, 0*8+frame)    # 0*8 because right animations are the 0th set in the sprite sheet
-                scrollBackground(-5,0)                      # The player is moving right, so we scroll the background left
-
-            elif keyPressed("down"):
-                changeSpriteImage(testSprite, 1*8+frame)    # down facing animations are the 1st set
-                scrollBackground(0, -5)
-
-            elif keyPressed("left"):
-                changeSpriteImage(testSprite, 2*8+frame)    # and so on
-                scrollBackground(5,0)
-
-            elif keyPressed("up"):
-                changeSpriteImage(testSprite,3*8+frame)
-                scrollBackground(0,5)
-
-            else:
-                changeSpriteImage(testSprite, 1 * 8 + 5)  # the static facing front look
-
-            updateDisplay()
-            tick(120)
-        endWait()
+        g = game.Game(500,500)
+        g.run()
+        reset()
+        root.deiconify()  
 
     else:
         drawBackground()

@@ -1,66 +1,58 @@
 import socket
-import threading
+from _thread import *
 import sys
-import pickle
 
-class Servidor():
-	"""docstring for Servidor"""
-	def __init__(self, host="localhost", port=6000):
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-		self.clientes = []
+server = ''
+port = 5555
 
-		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.sock.bind((host, port))
-		self.sock.listen(10)
-		self.sock.setblocking(False) #se desbloquea el socket
+server_ip = socket.gethostbyname(server)
 
-		aceptar = threading.Thread(target=self.aceptarCon)
-		procesar = threading.Thread(target=self.procesarCon)
-		
-		aceptar.daemon = True
-		aceptar.start()
+try:
+    s.bind((server, port))
 
-		procesar.daemon = True# se une al hilo principal  
-		procesar.start()
+except socket.error as e:
+    print(str(e))
 
-		while True:
-			msg = input('->')
-			if msg == 'salir':
-				self.sock.close()
-				sys.exit()
-			else:
-				pass
+s.listen(2)
+print("Waiting for a connection")
 
+currentId = "0"
+pos = ["0:50,50", "1:100,100"]
+def threaded_client(conn):
+    global currentId, pos
+    conn.send(str.encode(currentId))
+    currentId = "1"
+    reply = ''
+    while True:
+        try:
+            data = conn.recv(2048)
+            reply = data.decode('utf-8')
+            if not data:
+                conn.send(str.encode("Goodbye"))
+                break
+            else:
+                print("Recieved: " + reply)
+                arr = reply.split(":")
+                id = int(arr[0])
+                pos[id] = reply
 
-	def msg_to_all(self, msg, cliente):
-		for c in self.clientes:
-			try:
-				if c != cliente:
-					c.send(msg)
-			except:
-				self.clientes.remove(c)
+                if id == 0: nid = 1
+                if id == 1: nid = 0
 
-	def aceptarCon(self):
-		print("aceptarCon iniciado")
-		while True:
-			try:
-				conn, addr = self.sock.accept()
-				conn.setblocking(False)
-				self.clientes.append(conn)
-			except:
-				pass
+                reply = pos[nid][:]
+                print("Sending: " + reply)
 
-	def procesarCon(self):
-		print("ProcesarCon iniciado")
-		while True:
-			if len(self.clientes) > 0:
-				for c in self.clientes:
-					try:
-						data = c.recv(1024)
-						if data:
-							self.msg_to_all(data,c)
-					except:
-						pass
+            conn.sendall(str.encode(reply))
+        except:
+            break
 
+    print("Connection Closed")
+    conn.close()
 
-s = Servidor()
+while True:
+    conn, addr = s.accept()
+    print("Connected to: ", addr)
+
+    start_new_thread(threaded_client, (conn,))
