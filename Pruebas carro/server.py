@@ -4,13 +4,16 @@ import sys
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-server = ''
-port = 5555
+multicast_group = '224.3.29.71'
+server_address = ('', 5000)
 
-server_ip = socket.gethostbyname(server)
+server_ip = multicast_group
 
 try:
-    s.bind((server, port))
+    s.bind(server_address)
+    group = socket.inet_aton(multicast_group)
+    mreq = struct.pack('4sL', group, socket.INADDR_ANY)
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
 except socket.error as e:
     print(str(e))
