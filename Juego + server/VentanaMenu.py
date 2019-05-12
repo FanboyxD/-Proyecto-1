@@ -120,7 +120,7 @@ def draw():
     disp.delete("all")
     if gameState == 1:
         root.withdraw()
-        g = game.Game(500,500)
+        g = game.Game(1920,1000)
         g.run()
         reset()
         root.deiconify()  
