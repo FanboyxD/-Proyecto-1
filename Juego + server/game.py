@@ -24,12 +24,14 @@ class player():
     def draw(self, win):
         if self.left:  
             win.blit(walkLeft, (self.x,self.y))                       
-        if self.right:
+        elif self.right:
             win.blit(walkRight, (self.x,self.y))
-        if self.up:
+        elif self.up:
             win.blit(walkUp, (self.x,self.y))
-        if self.down:
+        elif self.down:
             win.blit(walkDown, (self.x,self.y))
+        else:
+            win.blit(walkUp, (self.x,self.y))
             
     def move(self, dirn):
         """
@@ -155,9 +157,10 @@ class Canvas:
         return self.screen
 
     def draw_background(self):
-        bg = pygame.image.load('images/bg.jpg').convert()        
+        bg = pygame.image.load('images/bg.jpg').convert()       
         self.screen.fill((255,255,255))
         self.screen.blit(bg, (0,0))
+
 
 
 
