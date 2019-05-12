@@ -10,15 +10,17 @@ Se investiga sobre como podemos crear una ventana en pygame y que pueda mover el
 
 08/05/2019
 14:00 - 22:00
-Comenzamos a programar el juego, le agregamos un background, y sprites de movimiento.
+Comenzamos a programar el juego, le agregamos un background, y sprites de movimiento. implementamos un boton de play
+el cual cierra la ventana del menu y abre la del juego.Despues investigamos como adaptar el servidor al juego
 
 09/05/2019
 14:00 - 20:00
-Se le agregaron disparos al jugador
+Se le agregaron disparos al jugador. Se consigue implementar el servidor y los sockets al juego
 
 10/05/2019
 14:00 - 20:00
-Se comienza a adaptar el codigo del juego con el de servidor y cliente.
+Se comienza a adaptar el codigo del juego con el de servidor y cliente. El profesor nos recomendo utilizar el multicast para facilitar la coneccion
+asi que se añade el multicast al juego
 
 11/05/2019
 16:00 
