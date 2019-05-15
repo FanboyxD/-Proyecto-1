@@ -48,6 +48,17 @@ class player():
         else:
             self.y += self.velocity
 
+class projectile(object):
+    def __init__(self,x,y,radius,color,facing):
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.color = color
+        self.facing = facing
+        self.vel = 15 * facing
+
+    def draw(self,win):
+        pygame.draw.circle(win, self.color, (self.x,self.y),self.radius)
 
 class Game:
 
@@ -62,6 +73,7 @@ class Game:
     def run(self):
         clock = pygame.time.Clock()
         run = True
+        bullets = []
         while run:
             clock.tick(60)
 
@@ -72,7 +84,26 @@ class Game:
                 if event.type == pygame.K_ESCAPE:
                     run = False
 
+            for bullet in bullets:
+                if bullet.x < 1920 and bullet.x > 0:
+                    bullet.x += bullet.vel
+                elif bullet.y < 1000 and bullet.y > 0:
+                    bullet.y += bullet.vel
+                elif bullet.x > 1920 or bullet.x < 0 :
+                    bullets.pop(bullets.index(bullet))
+                else:
+                    bullets.pop(bullets.index(bullet))
+
             keys = pygame.key.get_pressed()
+
+            if keys[pygame.K_c]:
+                if self.player.left:
+                    facing = -1
+                elif self.player.right:
+                    facing = 1
+                if len(bullets) < 1:
+                    bullets.append(projectile(round(self.player.x + 15),round(self.player.y + 10), 6, (200,10,56),facing))
+
 
             if keys[pygame.K_RIGHT]:
                 if self.player.x <= self.width - self.player.velocity:
@@ -112,6 +143,8 @@ class Game:
             # Update Canvas
             self.canvas.draw_background()
             self.player.draw(self.canvas.get_canvas())
+            for bullet in bullets:
+                bullet.draw(self.canvas.get_canvas())
             self.player2.draw(self.canvas.get_canvas())
             self.canvas.update()
 
