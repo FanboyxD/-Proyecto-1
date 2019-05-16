@@ -38,13 +38,13 @@ class player():
             
     def move(self, dirn): #Movimiento
         #se definen las 3 direcciones posibles
-        if dirn == 0: #izquierda
+        if dirn == 0: #derecha
             self.x += self.velocity
-        elif dirn == 1: #derecha
+        elif dirn == 1: #izquierda
             self.x -= self.velocity
-        elif dirn == 2: #abajo
+        elif dirn == 2: #arriba
             self.y -= self.velocity
-        else: #arriba
+        else: #abajo
             self.y += self.velocity
 
 #------------------------------Balas---------------------------------------------------------------
@@ -73,6 +73,7 @@ class Game:
         self.height = h
         self.player = player(50, 50)
         self.player2 = player(100,100)
+        self.bullet2 = projectile(-10,-10,6,(0,15,240),0)
         self.canvas = Canvas(self.width, self.height, "Dakar Death")
 
     def run(self): #Corre el juego
@@ -101,32 +102,32 @@ class Game:
             if keys[pygame.K_ESCAPE]: #en caso de la tecla escape tambien sale
                     run = False
 
-            if keys[pygame.K_c]:
-                if self.player.left:
+            if keys[pygame.K_c]: #si presiona la tecla "c" dispara una bala(solo una a la vez)
+                if self.player.left: #direccion de la bala
                     facing = -1
                 elif self.player.right:
                     facing = 1
-                if len(bullets) < 1:
+                if len(bullets) < 1: #limite de balas estblecido a 1
                     bullets.append(projectile(round(self.player.x + 15),round(self.player.y + 10), 6, (200,10,56),facing))
 
 
-            if keys[pygame.K_RIGHT]:
-                if self.player.x <= self.width - self.player.velocity:
-                    self.player.move(0)
+            if keys[pygame.K_RIGHT]: #si presiona la flecha derecha
+                if self.player.x <= self.width - self.player.velocity: #Mueve al jugador
+                    self.player.move(0)#lo mueve a la derecha
                     self.player.left = False
-                    self.player.right = True
+                    self.player.right = True #pone el sprite de la derecha
                     self.player.up = False
                     self.player.down = False
 
-            if keys[pygame.K_LEFT]:
-                if self.player.x >= self.player.velocity:
-                    self.player.move(1)
-                    self.player.left = True
+            if keys[pygame.K_LEFT]: #si presiona la flecha izquierda
+                if self.player.x >= self.player.velocity: #mueve al jugador
+                    self.player.move(1) #lo mueve a la iquierda
+                    self.player.left = True #sprite de la izquiera
                     self.player.right = False
                     self.player.up = False
                     self.player.down = False
 
-            if keys[pygame.K_UP]:
+            if keys[pygame.K_UP]: #si presiona la flecha de arriba pasa lo mismo que anteriormente pero con otra direccion
                 if self.player.y >= self.player.velocity:
                     self.player.move(2)
                     self.player.left = False
@@ -134,7 +135,7 @@ class Game:
                     self.player.up = True
                     self.player.down = False
 
-            if keys[pygame.K_DOWN]:
+            if keys[pygame.K_DOWN]:# de la misma manera si es hacia abajo
                 if self.player.y <= self.height - self.player.velocity:
                     self.player.move(3)
                     self.player.left = False
@@ -142,7 +143,8 @@ class Game:
                     self.player.up = False
                     self.player.down = True
 
-            if 100 <= self.player.x <= 200 and 100 <= self.player.y <= 200:
+            #Zonas dañinas para el jugador (6 total)
+            if 100 <= self.player.x <= 200 and 100 <= self.player.y <= 200: #medidas de las zonas dañinas
                 self.score -= 3
 
             if 500 <= self.player.x <= 600 and 700 <= self.player.y <= 800:
@@ -160,7 +162,8 @@ class Game:
             if 1405 <= self.player.x <= 1505 and 222 <= self.player.y <= 322:
                 self.score -= 3
 
-            if 0 <= self.player.x <= 200 and 0 <= self.player.y <= 200:
+            #Zona de banderas (requisito para la meta,se encuentran en las esquinas)
+            if 0 <= self.player.x <= 200 and 0 <= self.player.y <= 200: #medidas de los espacios para recoger la bandera
                 self.banderas += 1
 
             if 1720 <= self.player.x <= 1920 and 0 <= self.player.y <= 200:
@@ -172,38 +175,50 @@ class Game:
             if 1720 <= self.player.x <= 1920 and 800 <= self.player.y <= 1000:
                 self.banderas += 1
 
-            if self.banderas > 4:
+            if self.banderas > 4:#En caso de recoger las 4 banderas no se suman mas banderas
                 self.banderas = 4
 
+            #Si se cumple lo siguiente y el jugador accede a la zona de la meta, gana el juego
             if self.score >= 50 and self.banderas == 4 and 860 <= self.player.x <= 1060 and 400 <= self.player.y <= 600:
                 pass
 
-            self.player2.x, self.player2.y = self.parse_data(self.send_data())
+            self.player2.x, self.player2.y = self.parse_data(self.send_data()) #Recibe los datos del jugador 2 y a su vez envia los del jugador 1
+            self.bullet2.x, self.bullet2.y = self.parse_data2(self.send_data())
 
-            self.canvas.draw_background()
-            self.player.draw(self.canvas.get_canvas())
-            for bullet in bullets:
+            self.canvas.draw_background() #Dibuja el fond
+            self.player.draw(self.canvas.get_canvas())#Dibuja al jugador 1
+            for bullet in bullets:#dibuja las balas que existan
                 bullet.draw(self.canvas.get_canvas())
-            self.player2.draw(self.canvas.get_canvas())
-            self.canvas.update()
+            if self.bullet2.x < 1920 and self.bullet.x > 0 and self.bullet.y < 1000 and self.bullet.y > 0: #En caso de estar en la ventana se mueve la bala
+                    self.bullet2.draw(self.canvas.get_canvas())
+            self.player2.draw(self.canvas.get_canvas()) #dibuja al jugador 2
+            self.canvas.update() #actualiza la ventana
 
-        pygame.quit()
+        pygame.quit()#Elimina la ventana de pygame
 
     def send_data(self): #Envia la pos al server
 
-        data = str(self.net.id) + ":" + str(self.player.x) + "," + str(self.player.y)
-        reply = self.net.send(data)
+        data = str(self.net.id) + ":" + str(self.player.x) + "," + str(self.player.y) + ":" + str(self.bullet.x) + "," + str(self.bullet.y) #La guarda en forma [id:posx,posy]
+        reply = self.net.send(data) #Envia los datos
         return reply
 
     @staticmethod
-    def parse_data(data): # Analisa los datos 
+    def parse_data(data): # Analisa los datos para el jugador 2
         try:
             d = data.split(":")[1].split(",") #Divide los datos
-            return int(d[0]), int(d[1])
+            return int(d[0]), int(d[1]) #Pos eje x/y
         except:
             return 0,0 #Si no hay datos la pos es 0,0
 
+    @staticmethod
+    def parse_data2(data): # Analisa los datos para las balas del jugador2
+        try:
+            dat = data.split(":")[2].split(",") #Divide los datos
+            return int(dat[0]), int(dat[1]) #Pos eje x/y
+        except:
+            return -10,-10 #Si no hay datos la pos es 0,0
 
+#------------------------------------------Canvas---------------------------------------------------------
 class Canvas:
 
     def __init__(self, w, h, name="None"): #Se crea un canvas con su ancho y altura
