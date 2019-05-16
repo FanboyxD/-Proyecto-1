@@ -80,6 +80,8 @@ class Game:
         clock = pygame.time.Clock() 
         run = True #inicia el run
         bullets = [] #variable para las balas
+        self.bulletx = -10
+        self.bullety = -10
         while run: 
             clock.tick(60) #tiempo en ms de refresco de la ventana
 
@@ -90,8 +92,10 @@ class Game:
             for bullet in bullets: #analisa cada bala
                 if bullet.x < 1920 and bullet.x > 0: #En caso de estar en la ventana se mueve la bala
                     bullet.x += bullet.vel
+                    self.bulletx = bullet.x
                 elif bullet.y < 1000 and bullet.y > 0:
                     bullet.y += bullet.vel
+                    self.bullety = bullet.y
                 elif bullet.x > 1920 or bullet.x < 0 : #En caso de salir de la ventana desaparece la bala
                     bullets.pop(bullets.index(bullet))
                 else:
@@ -189,7 +193,7 @@ class Game:
             self.player.draw(self.canvas.get_canvas())#Dibuja al jugador 1
             for bullet in bullets:#dibuja las balas que existan
                 bullet.draw(self.canvas.get_canvas())
-            if self.bullet2.x < 1920 and self.bullet.x > 0 and self.bullet.y < 1000 and self.bullet.y > 0: #En caso de estar en la ventana se mueve la bala
+            if self.bullet2.x < 1920 and self.bullet2.x > 0 and self.bullet2.y < 1000 and self.bullet2.y > 0: #En caso de estar en la ventana se mueve la bala
                     self.bullet2.draw(self.canvas.get_canvas())
             self.player2.draw(self.canvas.get_canvas()) #dibuja al jugador 2
             self.canvas.update() #actualiza la ventana
@@ -198,7 +202,7 @@ class Game:
 
     def send_data(self): #Envia la pos al server
 
-        data = str(self.net.id) + ":" + str(self.player.x) + "," + str(self.player.y) + ":" + str(self.bullet.x) + "," + str(self.bullet.y) #La guarda en forma [id:posx,posy]
+        data = str(self.net.id) + ":" + str(self.player.x) + "," + str(self.player.y) + ":" + str(self.bulletx) + "," + str(self.bullety) #La guarda en forma [id:posx,posy]
         reply = self.net.send(data) #Envia los datos
         return reply
 
