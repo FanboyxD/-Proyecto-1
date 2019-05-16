@@ -73,7 +73,7 @@ class Game:
         self.height = h
         self.player = player(50, 50)
         self.player2 = player(100,100)
-        self.bullet2 = projectile(-10,-10,6,(0,15,240),0)
+        self.bullet2 = projectile(-10,round(self.player2.y + 17),6,(0,15,240),0)
         self.canvas = Canvas(self.width, self.height, "Dakar Death")
 
     def run(self): #Corre el juego
@@ -81,7 +81,7 @@ class Game:
         run = True #inicia el run
         bullets = [] #variable para las balas
         self.bulletx = -10
-        self.bullety = -10
+        self.bullety = round(self.player2.y + 17)
         while run: 
             clock.tick(60) #tiempo en ms de refresco de la ventana
 
@@ -93,11 +93,6 @@ class Game:
                 if bullet.x < 1920 and bullet.x > 0: #En caso de estar en la ventana se mueve la bala
                     bullet.x += bullet.vel
                     self.bulletx = bullet.x
-                elif bullet.y < 1000 and bullet.y > 0:
-                    bullet.y += bullet.vel
-                    self.bullety = bullet.y
-                elif bullet.x > 1920 or bullet.x < 0 : #En caso de salir de la ventana desaparece la bala
-                    bullets.pop(bullets.index(bullet))
                 else:
                     bullets.pop(bullets.index(bullet))
 
@@ -187,13 +182,14 @@ class Game:
                 pass
 
             self.player2.x, self.player2.y = self.parse_data(self.send_data()) #Recibe los datos del jugador 2 y a su vez envia los del jugador 1
-            self.bullet2.x, self.bullet2.y = self.parse_data2(self.send_data())
+            self.bullet2.y = round(self.player2.y + 17)
+            self.bullet2.x = self.parse_data2(self.send_data())
 
             self.canvas.draw_background() #Dibuja el fond
             self.player.draw(self.canvas.get_canvas())#Dibuja al jugador 1
             for bullet in bullets:#dibuja las balas que existan
                 bullet.draw(self.canvas.get_canvas())
-            if self.bullet2.x < 1920 and self.bullet2.x > 0 and self.bullet2.y < 1000 and self.bullet2.y > 0: #En caso de estar en la ventana se mueve la bala
+            if self.bullet2.x < 1920 and self.bullet2.x > 0: #En caso de estar en la ventana se mueve la bala
                     self.bullet2.draw(self.canvas.get_canvas())
             self.player2.draw(self.canvas.get_canvas()) #dibuja al jugador 2
             self.canvas.update() #actualiza la ventana
@@ -218,9 +214,9 @@ class Game:
     def parse_data2(data): # Analisa los datos para las balas del jugador2
         try:
             dat = data.split(":")[2].split(",") #Divide los datos
-            return int(dat[0]), int(dat[1]) #Pos eje x/y
+            return int(dat[0]) #Pos eje x/y
         except:
-            return -10,-10 #Si no hay datos la pos es 0,0
+            return round(self.player2.y + 17) #Si no hay datos la pos es 0,0
 
 #------------------------------------------Canvas---------------------------------------------------------
 class Canvas:
