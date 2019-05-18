@@ -57,16 +57,16 @@ aboutmenu.add_command(label="Acerca de ...", command=version)#sub menu de "about
 
 
 #-------------------------Canvas o contenedores----------------------#
-disp = Canvas(root, width=800, height=800, bg="black") #ancho x alto + color del contenedor
+disp = Canvas(root, width=800, height=800, bg="black")
 disp.grid(row=0, column=0)
 
-gameState = 0 #Estado para definir si el juego debe ejecutarse o no
+gameState = 0
 gOver = tkinter.font.Font(family="Chiller", size=30, weight="bold")#Fuentes utilizadas en el programa
 Fuente2 = tkinter.font.Font(family="OCR-A II", size=20)
 FuenteMenu = tkinter.font.Font(family="Fixedsys", size=50)
 
 
-def startGame(): #inicio del juego
+def startGame():
     global gameState  #se llama a las variables globales estado del juego y nombre
     global name
     if len (name) > 0: #si hay un nombre el juego puede comenzar
@@ -79,18 +79,17 @@ def startGame(): #inicio del juego
         tkinter.messagebox.showinfo(message="Name must have at least 1 character") #si no hay un nombre establecido no se puede jugar
 
 
-def drawBackground(): #dibuja el fondo
+def drawBackground():
     pass
 
-def menu(): #funcion que crea el menu de inicio
+def menu():
     disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 - 50,
-                     text="Dakar Death", fill="white", font=FuenteMenu) #titulo del juego
+                     text="Dakar Death", fill="white", font=FuenteMenu)
     disp.create_text(disp.winfo_width()/2, disp.winfo_height()/2 + 20,
-                     text="Create Nick Name", fill="white", font=Fuente2) #Subtitulo
-    #Se obtiene en nombre del juegador
-    global name 
+                     text="Create Nick Name", fill="white", font=Fuente2)
+    global name
     texto=data.get()
-    if len (texto) >= 0: #Debe contener al menos 1 caracter
+    if len (texto) >= 0:
         name = texto
     else:
         messagebox.showinfo(message="Name must have at least 1 character")
@@ -108,28 +107,28 @@ savename.place(x=450,y=450)
 playbut=Button(disp, text=" READY ", font=21, command=startGame)#boton para iniciar el juego
 playbut.place(x=350,y=480)
 
-def reset(): #Funcion que reinicia el juego
+def reset():
     global gameState
     gameState = 0
-    playbut.place(x=350,y=480) #Recoloca los botones y el entry
+    playbut.place(x=350,y=480)
     savename.place(x=450,y=450)
     textField.place(x=320,y=450)
     textField.config(state=NORMAL)
-    data.set("")     
+    data.set("")    
 
-def draw(): #dibujado de la ventana 
-    disp.delete("all") #Elimina lo que hay en pantalla
-    if gameState == 1: #En caso de ser 1 inicia el juego
-        root.withdraw() #borra la ventana de tkinter
-        g = game.Game(1920,1000) #Establece el tamaño de la ventana de pygame
-        g.run() #ejecuta el juego
-        reset()#una vez finalizado el juego se llama reset
-        root.deiconify() #se redibuja la pestaña de tkinter
+def draw():
+    disp.delete("all")
+    if gameState == 1:
+        root.withdraw()
+        g = game.Game(1920,1000)
+        g.run()
+        reset()
+        root.deiconify()  
 
-    else: # En caso de no ser 1
-        drawBackground() #dibuja el fondo
-        menu() #llama al menu
-    root.after(25, draw) #tiempo de actualizacion
+    else:
+        drawBackground()
+        menu()
+    root.after(25, draw)
 draw()
 
 root.mainloop()
