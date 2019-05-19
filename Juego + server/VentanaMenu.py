@@ -117,10 +117,11 @@ def reset():
     data.set("")    
 
 def draw():
+    global name
     disp.delete("all")
     if gameState == 1:
         root.withdraw()
-        g = game.Game(1920,1000)
+        g = game.Game(1920,1000,name)
         g.run()
         reset()
         root.deiconify()  

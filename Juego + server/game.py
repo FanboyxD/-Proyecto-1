@@ -7,6 +7,7 @@ import random
 import sys
 import _thread
 import time
+import json
 from threading import Timer
 pygame.init()
 #-------------------------------Sprites---------------------------------------
@@ -134,7 +135,7 @@ class enemy(object):
             self.health -= 1 #cantidad de vida que se le rebaja al enemigo
         else:
             self.visible = False
-        print("1 hit + 1pto")
+        print("1 hit + 50ptos")
 
 #-----------------------------Obstaculos-----------------------------------------------------------
 class obstacles(object):
@@ -201,13 +202,16 @@ class projectile(object):
 #---------------------------Juego------------------------------------------------------------------
 class Game:
 
-    def __init__(self, w, h):#se define ancho x alto, se importa la red del cliente, se establece la pos inicial de los jugadores
+    def __init__(self, w, h,name):#se define ancho x alto, se importa la red del cliente, se establece la pos inicial de los jugadores
         #Variables necesarias para el puntaje y titulo de la ventana
         self.net = Network()
-        self.score = 0
-        self.banderas = 0 
+        self.score = 0 #Score del jugador1
+        self.score2 = 0 #Score del jugador2
+        self.banderas = 0
+        self.banderas2 = 0
         self.width = w
         self.height = h
+        self.name = name
         self.player = player(50, 50)
         self.player2 = player(100,100)
         self.bullet2 = projectile(-10,round(self.player2.y + 17),6,(0,15,240),0)
@@ -270,7 +274,7 @@ class Game:
                         if bullet.x + bullet.radius > police.hitbox[0] and bullet.x - bullet.radius < police.hitbox[0] + police.hitbox[2]:#Rango para golpear al enemigo
                             police.hit()
                             bullets.pop(bullets.index(bullet))
-                            self.score += 1
+                            self.score += 50
                             hitSound.play()
                             moving.stop() #sonidos
                 if bullet.x < 1920 and bullet.x > 0: #En caso de estar en la ventana se mueve la bala
@@ -390,12 +394,20 @@ class Game:
                 self.banderas = 4
 
             #Si se cumple lo siguiente y el jugador accede a la zona de la meta, gana el juego
-            if self.score >= 50 and self.banderas == 4 and 860 <= self.player.x <= 1060 and 400 <= self.player.y <= 600:
-                pass
+            if self.score >= 300 and self.banderas == 4 and 860 <= self.player.x <= 1060 and 400 <= self.player.y <= 600:
+                winner = font.render("You win",1,(255,0,0))#Score que se muestra en pantalla
+                self.canvas.get_canvas().blit(text,((850,500)))
+                highscore()
 
+            if self.score2 >= 50 and self.banderas2 == 4 and 860 <= self.player2.x <= 1060 and 400 <= self.player2.y <= 600:
+                winner = font.render("You lose",1,(255,0,0))#Score que se muestra en pantalla
+                self.canvas.get_canvas().blit(text,((850,500)))
+                highscore()
+
+            #Actualizacion de datos-------------------------------------------------------------------------------------------------------------------------
             self.player2.x, self.player2.y = self.parse_data(self.send_data()) #Recibe los datos del jugador 2 y a su vez envia los del jugador 1
             self.bullet2.y = round(self.player2.y + 17)
-            self.bullet2.x = self.parse_data2(self.send_data())
+            self.bullet2.x, self.score2, self.banderas2 = self.parse_data2(self.send_data())
             police.draw(self.canvas.get_canvas())
             self.canvas.draw_background() #Dibuja el fond
             self.player.draw(self.canvas.get_canvas())#Dibuja al jugador 1
@@ -418,7 +430,7 @@ class Game:
 
     def send_data(self): #Envia la pos al server
 
-        data = str(self.net.id) + ":" + str(self.player.x) + "," + str(self.player.y) + ":" + str(self.bulletx) + "," + str(self.bullety) #La guarda en forma [id:posx,posy]
+        data = str(self.net.id) + ":" + str(self.player.x) + "," + str(self.player.y) + ":" + str(self.bulletx) + "," + str(self.score) + "," + str(self.banderas) #La guarda en forma [id:posx,posy]
         reply = self.net.send(data) #Envia los datos
         return reply
 
@@ -434,18 +446,115 @@ class Game:
     def parse_data2(data): # Analisa los datos para las balas del jugador2
         try:
             dat = data.split(":")[2].split(",") #Divide los datos
-            return int(dat[0]) #Pos eje x/y
+            return int(dat[0]), int(dat[1]), int(dat[2]) #Pos eje x/score del jugador2
         except:
             return round(self.player2.y + 17) #Si no hay datos la pos es 0,0
+
+    def highscore(self):
+        with open('puntajes.json') as file: #abre el doc
+            puntajes = json.load(file)
+
+        if self.score>puntajes['Scores'][0]: #si el puntaje es mayor al mas alto lo guarda y corre todos un espacio sacando al quinto
+
+            puntajes['Scores'] = [self.score] + puntajes['Scores'][:-1]
+            puntajes["Nombres"] = [name] + puntajes["Nombres"][:-1]
+            with open('puntajes.json','w') as file:
+                json.dump(puntajes,file)
+        elif self.score == puntajes['Scores'][0]: #si es igual no lo guarda 
+            pass
+
+        elif self.score>puntajes['Scores'][1]: #si es mayor al segundo deja al primero y corre los demas un espacio
+
+            puntajes['Scores'] = puntajes['Scores'][0:1] + [self.score] + puntajes['Scores'][1:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:1] + [name] + puntajes["Nombres"][1:-1]
+            with open('puntajes.json','w') as file:
+                json.dump(puntajes,file)
+        elif self.score == puntajes['Scores'][1]: #si es igual no lo guarda
+            pass
+
+        elif self.score>puntajes['Scores'][2]: #si es mayor al tercero deja el 1 y 2 y corre los demas un espacio
+
+            puntajes['Scores'] = puntajes['Scores'][0:2] + [self.score] + puntajes['Scores'][2:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:2] + [name] + puntajes["Nombres"][2:-1]
+            with open('puntajes.json','w') as file:
+                json.dump(puntajes,file)
+        elif self.score == puntajes['Scores'][2]: #si es igual no lo guarda
+            pass
+
+        elif self.score>puntajes['Scores'][3]: #si es mayor al cuarto deja los primeros y corre un espacio
+
+            puntajes['Scores'] = puntajes['Scores'][0:3] + [self.score] + puntajes['Scores'][3:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:3] + [name] + puntajes["Nombres"][3:-1]
+            with open('puntajes.json','w') as file:
+                json.dump(puntajes,file)
+        elif self.score == puntajes['Scores'][3]: #si es igual no lo guarda
+            pass
+
+        elif self.score>puntajes['Scores'][4]: #si es mayor al ultimo lo reemplaza
+
+            puntajes['Scores'] = puntajes['Scores'][0:4] + [self.score]
+            puntajes["Nombres"] = puntajes["Nombres"][0:4] + [name]
+            with open('puntajes.json','w') as file:
+                json.dump(puntajes,file)
+        elif self.score == puntajes['Scores'][4]:#si es igual no se guarda
+            pass                
+        #Comprueba el score del jugador2-----------------------------------------------------------------------------------------------------
+        with open('puntajes.json') as file: #abre el doc
+            puntajes = json.load(file)
+
+        if self.score2>puntajes['Scores'][0]: #si el puntaje es mayor al mas alto lo guarda y corre todos un espacio sacando al quinto
+
+            puntajes['Scores'] = [self.score2] + puntajes['Scores'][:-1]
+            puntajes["Nombres"] = [name] + puntajes["Nombres"][:-1]
+            with open('puntajes.json','w') as file:
+                json.dump(puntajes,file)
+        elif self.score2 == puntajes['Scores'][0]: #si es igual no lo guarda 
+            pass
+
+        elif self.score2>puntajes['Scores'][1]: #si es mayor al segundo deja al primero y corre los demas un espacio
+
+            puntajes['Scores'] = puntajes['Scores'][0:1] + [self.score2] + puntajes['Scores'][1:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:1] + [name] + puntajes["Nombres"][1:-1]
+            with open('puntajes.json','w') as file:
+                json.dump(puntajes,file)
+        elif self.score2 == puntajes['Scores'][1]: #si es igual no lo guarda
+            pass
+
+        elif self.score2>puntajes['Scores'][2]: #si es mayor al tercero deja el 1 y 2 y corre los demas un espacio
+
+            puntajes['Scores'] = puntajes['Scores'][0:2] + [self.score2] + puntajes['Scores'][2:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:2] + [name] + puntajes["Nombres"][2:-1]
+            with open('puntajes.json','w') as file:
+                json.dump(puntajes,file)
+        elif self.score2 == puntajes['Scores'][2]: #si es igual no lo guarda
+            pass
+
+        elif self.score2>puntajes['Scores'][3]: #si es mayor al cuarto deja los primeros y corre un espacio
+
+            puntajes['Scores'] = puntajes['Scores'][0:3] + [self.score2] + puntajes['Scores'][3:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:3] + [name] + puntajes["Nombres"][3:-1]
+            with open('puntajes.json','w') as file:
+                json.dump(puntajes,file)
+        elif self.score2 == puntajes['Scores'][3]: #si es igual no lo guarda
+            pass
+
+        elif self.score2>puntajes['Scores'][4]: #si es mayor al ultimo lo reemplaza
+
+            puntajes['Scores'] = puntajes['Scores'][0:4] + [self.score2]
+            puntajes["Nombres"] = puntajes["Nombres"][0:4] + [name]
+            with open('puntajes.json','w') as file:
+                json.dump(puntajes,file)
+        elif self.score2 == puntajes['Scores'][4]:#si es igual no se guarda
+            pass
 
 #------------------------------------------Canvas---------------------------------------------------------
 class Canvas:
 
-    def __init__(self, w, h, name="None"): #Se crea un canvas con su ancho y altura
+    def __init__(self, w, h, namec="None"): #Se crea un canvas con su ancho y altura
         self.width = w
         self.height = h
         self.screen = pygame.display.set_mode((w,h))
-        pygame.display.set_caption(name)
+        pygame.display.set_caption(namec)
 
 
     @staticmethod
