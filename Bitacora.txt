@@ -1,4 +1,4 @@
-06/05/2019
+﻿06/05/2019
 19:00 - 21:00
 Se crea un nuevo menu usando como referencia el menu del proyecto anterior. Además se agrega un submenu en la pestaña "file"
 llamado "Highscores" que abre una ventana la cual muestra los puntajes mas altos
@@ -25,3 +25,31 @@ asi que se añade el multicast al juego
 11/05/2019
 16:00 
 Se le ponen sprites a los jugadores 
+
+
+12/05/2019
+13:00 
+Se añaden disparos y otros ajustes al juego en base a otro codigo que hicimos aparte con pruebas 
+
+14/05/2019
+16:00
+Se inserta el formato de coordenadas al servidor para: el numero de cliente,coord del jugador y coord de las balas enemigas
+
+16/05/2019
+12:30
+Se inicia la documentacion externa del juego
+Se logra que aparescan: el jugador2 y sus disparos en la pantalla del jugador1 
+
+17/05/2019
+19:00
+Se comenta el codigo del juego para la documentacion interna
+Se realizan pruebas con el multicast para intentar adaptarlo al servidor que ya tenemos. Ademas añadimos zonas de peligro para 
+el jugador
+
+18/05/2019
+13:00
+Se adaptan los obtaculos y enemigos creados en el codigo de pruebas 
+
+19/05/2019
+11:00
+Se finalizan los detalles finales para la version final del juego 
