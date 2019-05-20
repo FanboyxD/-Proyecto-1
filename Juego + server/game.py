@@ -134,7 +134,7 @@ class enemy(object):
             self.health -= 1 #cantidad de vida que se le rebaja al enemigo
         else:
             self.visible = False
-        print("1 hit + 50ptos")
+        print("1 hit + 75ptos")
 
 #-----------------------------Obstaculos-----------------------------------------------------------
 class obstacles(object):
@@ -206,12 +206,16 @@ class Game:
         self.net = Network()
         self.score = 0 #Score del jugador1
         self.score2 = 0 #Score del jugador2
-        self.banderas = 0
+        self.bandera1 = 0
+        self.bandera2 = 0
+        self.bandera3 = 0
+        self.bandera4 = 0
+        self.banderastot = 0
         self.banderas2 = 0
         self.width = w
         self.height = h
         self.name = name
-        self.player = player(50, 210)
+        self.player = player(50, 50)
         self.player2 = player(100,100)
         self.bullet2 = projectile(-10,round(self.player2.y + 17),6,(0,15,240),0)
         self.canvas = Canvas(self.width, self.height, "Dakar Death")
@@ -240,8 +244,8 @@ class Game:
     
             for objectt in objects: #Borra los obstaculos cuando salen de la pantalla
                 if objectt.collide(self.player.hitbox):
-                    pygame.time.delay(1000)
-                    self.score -= 1
+                    pygame.time.delay(500)
+                    self.score -= 10
                 objectt.x -= 1.4
                 if objectt.x < -objectt.width * -1:
                     objects.pop(objects.index(objectt))
@@ -269,7 +273,7 @@ class Game:
                         font1 = pygame.font.SysFont("comicsans",100)
                         perdida = font1.render("-5",1,(255,0,0))
                         self.canvas.get_canvas().blit(perdida,((850,500)))
-                        self.score -= 5
+                        self.score -= 50
    
             for bullet in bullets: #analisa cada bala
                 if self.police.visible == True:
@@ -277,7 +281,7 @@ class Game:
                         if bullet.x + bullet.radius > self.police.hitbox[0] and bullet.x - bullet.radius < self.police.hitbox[0] + self.police.hitbox[2]:#Rango para golpear al enemigo
                             self.police.hit()
                             bullets.pop(bullets.index(bullet))
-                            self.score += 50
+                            self.score += 75
                             hitSound.play()
                             moving.stop() #sonidos
                 if bullet.x < 1920 and bullet.x > 0: #En caso de estar en la ventana se mueve la bala
@@ -364,7 +368,6 @@ class Game:
             #Zonas dañinas para el jugador (6 total)
             if 100 <= self.player.x <= 200 and 100 <= self.player.y <= 200: #medidas de las zonas dañinas
                 self.score -= 1
-
             if 500 <= self.player.x <= 600 and 700 <= self.player.y <= 800:
                 self.score -= 1
 
@@ -382,30 +385,47 @@ class Game:
 
             #Zona de banderas (requisito para la meta,se encuentran en las esquinas)
             if 0 <= self.player.x <= 200 and 0 <= self.player.y <= 200: #medidas de los espacios para recoger la bandera
-                self.banderas += 1
+                if self.bandera1 == 0:
+                    self.bandera1 += 1
+                    self.score += 50
+                else:
+                    pass
 
             if 1720 <= self.player.x <= 1920 and 0 <= self.player.y <= 200:
-                self.banderas += 1
+                if self.bandera2 == 0:
+                    self.bandera2 += 1
+                    self.score += 50
+                else:
+                    pass                
 
             if 0 <= self.player.x <= 200 and 800 <= self.player.y <= 1000:
-                self.banderas += 1
+                if self.bandera3 == 0:
+                    self.bandera3 += 1
+                    self.score += 50
+                else:
+                    pass
 
             if 1720 <= self.player.x <= 1920 and 800 <= self.player.y <= 1000:
-                self.banderas += 1
+                if self.bandera4 == 0:
+                    self.bandera4 += 1
+                    self.score += 50
+                else:
+                    pass
 
-            if self.banderas > 4:#En caso de recoger las 4 banderas no se suman mas banderas
-                self.banderas = 4
+            self.banderastot = self.bandera1 + self.bandera2 + self.bandera3 + self.bandera4
+            if self.banderastot > 4:#En caso de recoger las 4 banderas no se suman mas banderas
+                self.banderastot = 4
 
             #Si se cumple lo siguiente y el jugador accede a la zona de la meta, gana el juego
-            if self.score >= 300 and self.banderas == 4 and 860 <= self.player.x <= 1060 and 400 <= self.player.y <= 600:
+            if self.score >= 200 and 860 <= self.player.x <= 1060 and 400 <= self.player.y <= 600:
                 winner = font.render("You win",1,(255,0,0))#Score que se muestra en pantalla
                 self.canvas.get_canvas().blit(winner,((850,500)))
-                #highscore()
+                #self.highscore()
 
-            if self.score2 >= 50 and self.banderas2 == 4 and 860 <= self.player2.x <= 1060 and 400 <= self.player2.y <= 600:
+            if self.score2 >= 200 and self.banderas2 == 4 and 860 <= self.player2.x <= 1060 and 400 <= self.player2.y <= 600:
                 loser = font.render("You lose",1,(255,0,0))#Score que se muestra en pantalla
                 self.canvas.get_canvas().blit(loser,((850,500)))
-                highscore()
+                #self.highscore()
 
             #Actualizacion de datos-------------------------------------------------------------------------------------------------------------------------
             self.player2.x, self.player2.y = self.parse_data(self.send_data()) #Recibe los datos del jugador 2 y a su vez envia los del jugador 1
@@ -433,7 +453,7 @@ class Game:
 
     def send_data(self): #Envia la pos al server
 
-        data = str(self.net.id) + ":" + str(self.player.x) + "," + str(self.player.y) + ":" + str(self.bulletx) + "," + str(self.score) + "," + str(self.banderas) #La guarda en forma [id:posx,posy]
+        data = str(self.net.id) + ":" + str(self.player.x) + "," + str(self.player.y) + ":" + str(self.bulletx) + "," + str(self.score) + "," + str(self.banderastot) #La guarda en forma [id:posx,posy]
         reply = self.net.send(data) #Envia los datos
         return reply
 
@@ -573,8 +593,27 @@ class Canvas:
         return self.screen
 
     def draw_background(self): #Carga la imagen del fondo y la dibuja
-        #bg = pygame.image.load('images/bg.jpg').convert()
-        self.screen.fill((255,255,255)) #Color de relleno
+        #bg = pygame.image.load('images/fondo-arena.png')
+        crater = pygame.image.load('images/crater.png')
+        transparencia = crater.get_at((0,0))
+        crater.set_colorkey(transparencia,RLEACCEL)
+        bandera = pygame.image.load('images/bandera.png')
+        meta = pygame.image.load('images/meta.png')
+        self.screen.fill((215,150,55)) #Color de relleno
+        #se dibujan las zonas de peligro
+        self.screen.blit(crater,(100,100))
+        self.screen.blit(crater,(500,700))
+        self.screen.blit(crater,(650,300))
+        self.screen.blit(crater,(1100,400))
+        self.screen.blit(crater,(1275,620))
+        self.screen.blit(crater,(1405,222))
+        #se dibujan las banderas
+        self.screen.blit(bandera,(0,0))
+        self.screen.blit(bandera,(1720,0))
+        self.screen.blit(bandera,(0,800))
+        self.screen.blit(bandera,(1720,800))
+        #se dibuja la meta
+        self.screen.blit(meta,(860,400))
         #self.screen.blit(bg, (0,0)) #Dibujado del background
 
 
