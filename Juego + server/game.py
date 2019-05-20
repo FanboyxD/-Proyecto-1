@@ -68,9 +68,6 @@ class player():
         self.x = 60
         self. y = 410
         self.walkCount = 0
-        font1 = pygame.font.SysFont("comicsans",100)
-        text = font1.render("-5",1,(255,0,0))
-        self.canvas.get_canvas().blit(text,(250-(text.get_width()/2),200))
         pygame.display.update()
         i = 0
         while i < 300:
@@ -88,12 +85,12 @@ class enemy(object):
     walkUp = [pygame.image.load("images/Enemy sprites Up.png")]
     walkDown = [pygame.image.load("images/Enemy sprites Down.png")]
     
-    def __init__(self, x, y, width, height, end):
+    def __init__(self, x, y, width, height, end1, end2):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.path = [x, end]  #Limite en eje x de donde llega el enemigo
+        self.path = [end1, end2]  #Limite en eje x de donde llega el enemigo
         self.walkCount = 0
         self.vel = 5
         self.hitbox = (self.x+20,self.y,28,60)
@@ -115,6 +112,7 @@ class enemy(object):
             pygame.draw.rect(win,(0,255,0),(self.hitbox[0],self.hitbox[1]-20,50-(5*(8-self.health)),10))#lo que se le rebaja de vida al enemigo
             self.hitbox = (self.x+0,self.y+6,35,20)
             #pygame.draw.rect(win,(255,0,0),self.hitbox,2)
+
     def move(self):
         if self.vel > 0:  # Si se mueve a la derecha
             if self.x < self.path[1] + self.vel: # Si aun no se ha alcanzado el limite a la derecha
@@ -130,6 +128,7 @@ class enemy(object):
                 self.vel = self.vel * -1
                 self.x += self.vel
                 self.walkCount = 0
+
     def hit(self):
         if self.health > 1:
             self.health -= 1 #cantidad de vida que se le rebaja al enemigo
@@ -212,17 +211,18 @@ class Game:
         self.width = w
         self.height = h
         self.name = name
-        self.player = player(50, 50)
+        self.player = player(50, 210)
         self.player2 = player(100,100)
         self.bullet2 = projectile(-10,round(self.player2.y + 17),6,(0,15,240),0)
         self.canvas = Canvas(self.width, self.height, "Dakar Death")
+        self.police = enemy(100, 500, 35, 30, 0, 1920)
 
     def run(self): #Corre el juego
         clock = pygame.time.Clock() 
         run = True #inicia el run
         bullets = [] #variable para las balas
         font = pygame.font.SysFont("comicsans",30,True,True)
-        police = enemy(100, 510, 35, 30, 1920)
+
         pygame.time.set_timer(USEREVENT+1,500)
         pygame.time.set_timer(USEREVENT+2,random.randrange(2000,3500))#tiempo en que salen los obstaculos
         shootLoop = 0
@@ -233,7 +233,7 @@ class Game:
         start_ticks=pygame.time.get_ticks() #starter tick
         while run:
             seconds=(pygame.time.get_ticks()-start_ticks)/1000 #calculate how many seconds
-            clock.tick(60) #tiempo en ms de refresco de la ventana
+            clock.tick(30) #tiempo en ms de refresco de la ventana
     
             if seconds>120: #Tiempo antes de subir de nivel
                 self.Level += 1 #Aumenta la variable de nivel
@@ -260,19 +260,22 @@ class Game:
                         objects.append(rocks(1920,200,64,64))
                         
 
-            if police.visible == True:
-                if self.player.hitbox[1] < police.hitbox[1]+police.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > police.hitbox[1]: #Rango donde el judagor recibe daño
-                    if self.player.hitbox[0] + self.player.hitbox[2] > police.hitbox[0] and self.player.hitbox[0] < police.hitbox[0] + police.hitbox[2]:#Rango donde el judagor recibe daño
+            if self.police.visible == True:
+                if self.player.hitbox[1] < self.police.hitbox[1]+self.police.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > self.police.hitbox[1]: #Rango donde el judagor recibe daño
+                    if self.player.hitbox[0] + self.player.hitbox[2] > self.police.hitbox[0] and self.player.hitbox[0] < self.police.hitbox[0] + self.police.hitbox[2]:#Rango donde el judagor recibe daño
                         moving.stop()
                         crashSound.play()
                         self.player.hit(self.canvas.get_canvas())
+                        font1 = pygame.font.SysFont("comicsans",100)
+                        perdida = font1.render("-5",1,(255,0,0))
+                        self.canvas.get_canvas().blit(perdida,((850,500)))
                         self.score -= 5
    
             for bullet in bullets: #analisa cada bala
-                if police.visible == True:
-                    if bullet.y - bullet.radius < police.hitbox[1]+police.hitbox[3] and bullet.y + bullet.radius > police.hitbox[1]:#Rango para golpear al enemigo
-                        if bullet.x + bullet.radius > police.hitbox[0] and bullet.x - bullet.radius < police.hitbox[0] + police.hitbox[2]:#Rango para golpear al enemigo
-                            police.hit()
+                if self.police.visible == True:
+                    if bullet.y - bullet.radius < self.police.hitbox[1]+self.police.hitbox[3] and bullet.y + bullet.radius > self.police.hitbox[1]:#Rango para golpear al enemigo
+                        if bullet.x + bullet.radius > self.police.hitbox[0] and bullet.x - bullet.radius < self.police.hitbox[0] + self.police.hitbox[2]:#Rango para golpear al enemigo
+                            self.police.hit()
                             bullets.pop(bullets.index(bullet))
                             self.score += 50
                             hitSound.play()
@@ -360,22 +363,22 @@ class Game:
 
             #Zonas dañinas para el jugador (6 total)
             if 100 <= self.player.x <= 200 and 100 <= self.player.y <= 200: #medidas de las zonas dañinas
-                self.score -= 3
+                self.score -= 1
 
             if 500 <= self.player.x <= 600 and 700 <= self.player.y <= 800:
-                self.score -= 3
+                self.score -= 1
 
             if 650 <= self.player.x <= 750 and 300 <= self.player.y <= 400:
-                self.score -= 3
+                self.score -= 1
 
             if 1100 <= self.player.x <= 1200 and 400 <= self.player.y <= 500:
-                self.score -= 3
+                self.score -= 1
 
             if 1275 <= self.player.x <= 1375 and 620 <= self.player.y <= 720:
-                self.score -= 3
+                self.score -= 1
 
             if 1405 <= self.player.x <= 1505 and 222 <= self.player.y <= 322:
-                self.score -= 3
+                self.score -= 1
 
             #Zona de banderas (requisito para la meta,se encuentran en las esquinas)
             if 0 <= self.player.x <= 200 and 0 <= self.player.y <= 200: #medidas de los espacios para recoger la bandera
@@ -396,19 +399,19 @@ class Game:
             #Si se cumple lo siguiente y el jugador accede a la zona de la meta, gana el juego
             if self.score >= 300 and self.banderas == 4 and 860 <= self.player.x <= 1060 and 400 <= self.player.y <= 600:
                 winner = font.render("You win",1,(255,0,0))#Score que se muestra en pantalla
-                self.canvas.get_canvas().blit(text,((850,500)))
-                highscore()
+                self.canvas.get_canvas().blit(winner,((850,500)))
+                #highscore()
 
             if self.score2 >= 50 and self.banderas2 == 4 and 860 <= self.player2.x <= 1060 and 400 <= self.player2.y <= 600:
-                winner = font.render("You lose",1,(255,0,0))#Score que se muestra en pantalla
-                self.canvas.get_canvas().blit(text,((850,500)))
+                loser = font.render("You lose",1,(255,0,0))#Score que se muestra en pantalla
+                self.canvas.get_canvas().blit(loser,((850,500)))
                 highscore()
 
             #Actualizacion de datos-------------------------------------------------------------------------------------------------------------------------
             self.player2.x, self.player2.y = self.parse_data(self.send_data()) #Recibe los datos del jugador 2 y a su vez envia los del jugador 1
             self.bullet2.y = round(self.player2.y + 17)
             self.bullet2.x, self.score2, self.banderas2 = self.parse_data2(self.send_data())
-            police.draw(self.canvas.get_canvas())
+            self.police.draw(self.canvas.get_canvas())
             self.canvas.draw_background() #Dibuja el fond
             self.player.draw(self.canvas.get_canvas())#Dibuja al jugador 1
             for bullet in bullets:#dibuja las balas que existan
@@ -570,9 +573,9 @@ class Canvas:
         return self.screen
 
     def draw_background(self): #Carga la imagen del fondo y la dibuja
-        bg = pygame.image.load('images/bg.jpg').convert()
+        #bg = pygame.image.load('images/bg.jpg').convert()
         self.screen.fill((255,255,255)) #Color de relleno
-        self.screen.blit(bg, (0,0)) #Dibujado del background
+        #self.screen.blit(bg, (0,0)) #Dibujado del background
 
 
 
