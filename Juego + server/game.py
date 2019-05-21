@@ -111,6 +111,7 @@ class enemy(object):
             pygame.draw.rect(win,(0,0,0),(self.hitbox[0],self.hitbox[1]-20,50,10)) #dimensiones de la barra de vida del enemigo
             pygame.draw.rect(win,(0,255,0),(self.hitbox[0],self.hitbox[1]-20,50-(5*(8-self.health)),10))#lo que se le rebaja de vida al enemigo
             self.hitbox = (self.x+0,self.y+6,35,20)
+
             #pygame.draw.rect(win,(255,0,0),self.hitbox,2)
 
     def move(self):
@@ -135,7 +136,6 @@ class enemy(object):
         else:
             self.visible = False
         print("1 hit + 75ptos")
-
 #-----------------------------Obstaculos-----------------------------------------------------------
 class obstacles(object):
     img = [pygame.image.load(os.path.join("images","wall.png")),pygame.image.load(os.path.join("images","cactus.png")),pygame.image.load(os.path.join("images","rocks.png"))]
@@ -237,7 +237,7 @@ class Game:
         start_ticks=pygame.time.get_ticks() #starter tick
         while run:
             seconds=(pygame.time.get_ticks()-start_ticks)/1000 #calculate how many seconds
-            clock.tick(30) #tiempo en ms de refresco de la ventana
+            clock.tick(144) #tiempo en ms de refresco de la ventana
     
             if seconds>120: #Tiempo antes de subir de nivel
                 self.Level += 1 #Aumenta la variable de nivel
@@ -356,6 +356,8 @@ class Game:
                     self.player.up = True
                     self.player.down = False
                     brake.play() #sonidos
+                if keys[pygame.K_p]:
+                    self.pausa()
             else:
                 if  self.player.BrakeCount >= -0:
                     self.player.y -= (self.player.BrakeCount * abs(self.player.BrakeCount))
@@ -417,7 +419,7 @@ class Game:
                 self.banderastot = 4
 
             #Si se cumple lo siguiente y el jugador accede a la zona de la meta, gana el juego
-            if self.score >= 200 and 860 <= self.player.x <= 1060 and 400 <= self.player.y <= 600:
+            if self.score >= 200 and self.banderastot==4 and 860 <= self.player.x <= 1060 and 400 <= self.player.y <= 600:
                 winner = font.render("You win",1,(255,0,0))#Score que se muestra en pantalla
                 self.canvas.get_canvas().blit(winner,((850,500)))
                 #self.highscore()
@@ -431,9 +433,9 @@ class Game:
             self.player2.x, self.player2.y = self.parse_data(self.send_data()) #Recibe los datos del jugador 2 y a su vez envia los del jugador 1
             self.bullet2.y = round(self.player2.y + 17)
             self.bullet2.x, self.score2, self.banderas2 = self.parse_data2(self.send_data())
-            self.police.draw(self.canvas.get_canvas())
-            self.canvas.draw_background() #Dibuja el fond
+            self.canvas.draw_background() #Dibuja el fondo
             self.player.draw(self.canvas.get_canvas())#Dibuja al jugador 1
+            self.police.draw(self.canvas.get_canvas())
             for bullet in bullets:#dibuja las balas que existan
                 bullet.draw(self.canvas.get_canvas())
             for x in objects:
@@ -473,7 +475,26 @@ class Game:
         except:
             return round(self.player2.y + 17) #Si no hay datos la pos es 0,0
 
-    def highscore(self):
+    def pausa(self):
+        pausado = True
+        font = pygame.font.SysFont("comicsans",30,True,True)
+        while pausado:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+
+                keys = pygame.key.get_pressed()
+
+                if keys[pygame.K_ESCAPE]: #en caso de la tecla escape tambien sale
+                    run = False
+
+                if keys[pygame.K_r]: #reanuda la partida con la tecla "r"
+                    pausado = False                
+            textopausa = font.render("Pausa, para reanudar presione <r>",1,(200,10,10))#Score que se muestra en pantalla
+            self.canvas.get_canvas().blit(textopausa,((650,100)))
+            self.canvas.update()
+
+    def highscore(self): #Funcion que analiza el puntaje
         with open('puntajes.json') as file: #abre el doc
             puntajes = json.load(file)
 
