@@ -131,7 +131,7 @@ class enemy(object): #imagenes del enemigo
             self.health -= 1 #cantidad de vida que se le rebaja al enemigo
         else:
             self.visible = False
-        print("1 hit + 75ptos") #cantidad de puntos obtenidos
+        print("1 hit + 50ptos") #cantidad de puntos obtenidos
 #-----------------------------Obstaculos-----------------------------------------------------------
 class obstacles(object): 
     img = [pygame.image.load(os.path.join("images","wall.png")),pygame.image.load(os.path.join("images","cactus.png")),pygame.image.load(os.path.join("images","rocks.png"))]
@@ -273,7 +273,7 @@ class Game:
                         if bullet.x + bullet.radius > self.police.hitbox[0] and bullet.x - bullet.radius < self.police.hitbox[0] + self.police.hitbox[2]:#Rango para golpear al enemigo
                             self.police.hit() #llama a la funcion hit del enemigo y destruye la bala
                             bullets.pop(bullets.index(bullet))
-                            self.score += 75 #suma 75 ptos
+                            self.score += 50 #suma 75 ptos
                             hitSound.play()
                             moving.stop() #sonidos
                 if bullet.x < 1920 and bullet.x > 0: #En caso de estar en la ventana se mueve la bala
@@ -410,17 +410,6 @@ class Game:
             if self.banderastot > 4:#En caso de recoger las 4 banderas no se suman mas banderas
                 self.banderastot = 4
 
-            #Si se cumple lo siguiente y el jugador accede a la zona de la meta, gana el juego
-            if self.score >= 200 and self.banderastot==4 and 860 <= self.player.x <= 1060 and 400 <= self.player.y <= 600:#en caso de ganar el jugador1
-                winner = font.render("You win",1,(255,0,0))#Score que se muestra en pantalla
-                self.canvas.get_canvas().blit(winner,((850,500)))
-                self.highscore() #llama al guardado de scores para el jugador1 y 2
-
-            if self.score2 >= 200 and self.banderas2 == 4 and 860 <= self.player2.x <= 1060 and 400 <= self.player2.y <= 600:#en caso de ganar el jugador2
-                loser = font.render("You lose",1,(255,0,0))#Score que se muestra en pantalla
-                self.canvas.get_canvas().blit(loser,((850,500)))
-                self.highscore() #llama al guardado de scores para el juador 1 y 2
-
             #Actualizacion de datos-------------------------------------------------------------------------------------------------------------------------
             self.player2.x, self.player2.y = self.parse_data(self.send_data()) #Recibe los datos del jugador 2 y a su vez envia los del jugador 1
             self.bullet2.y = round(self.player2.y + 17)
@@ -432,6 +421,27 @@ class Game:
                 bullet.draw(self.canvas.get_canvas())
             for x in objects:
                 x.draw(self.canvas.get_canvas())#dibuja los obstaculos
+
+            #Si se cumple lo siguiente y el jugador accede a la zona de la meta, gana el juego
+            if self.score >= 350 and self.banderastot==4 and 860 <= self.player.x <= 1060 and 400 <= self.player.y <= 600:#en caso de ganar el jugador1
+                winner = font.render("You win",1,(255,0,0))#Score que se muestra en pantalla
+                self.canvas.get_canvas().blit(winner,((850,500)))
+                self.canvas.update() #actuliza la pantalla
+                self.highscore() #llama al guardado de scores para el jugador1 y 2
+                self.player.x = 60 #saca al jugador de la zona para evitar lag
+                self.player.y = 410
+                pygame.time.delay(10000) #Espera un tiempo 
+                run = False #luego cierra el juego (justo antes de cerrase da un pequeño lagaso)
+
+            if self.score2 >= 350 and self.banderas2 == 4 and 860 <= self.player2.x <= 1060 and 400 <= self.player2.y <= 600:#en caso de ganar el jugador2
+                loser = font.render("You lose",1,(255,0,0))#Score que se muestra en pantalla
+                self.canvas.get_canvas().blit(loser,((850,500)))
+                self.canvas.update() #actualiza la pantalla
+                self.highscore() #llama al guardado de scores para el juador 1 y 2
+                self.player2.x = 60 #saca al jugador2 de la meta para evitar lag
+                self.player2.y = 460
+                pygame.time.delay(10000) #espera un periodo de tiempo
+                run = False #cierra el juego (da un pequeño lagaso)
 
             text = font.render("Score: "+str(self.score),1,(255,0,0))#Score que se muestra en pantalla
             self.canvas.get_canvas().blit(text,((850,30)))
@@ -463,7 +473,7 @@ class Game:
     def parse_data2(data): # Analisa los datos para las balas del jugador2
         try:
             dat = data.split(":")[2].split(",") #Divide los datos
-            return int(dat[0]), int(dat[1]), int(dat[2]), str(dat[3]), int(dat[4]) #Pos eje x/score del jugador2
+            return int(dat[0]), int(dat[1]), int(dat[2]), str(dat[3]), int(dat[4]) #datos recividos pos jugador, pos balas, banderas,nombre y pausado
         except:
             return -10,0,0," ",0 #Si no hay datos la pos es 0,0
 
@@ -493,7 +503,7 @@ class Game:
         if self.score>puntajes['Scores'][0]: #si el puntaje es mayor al mas alto lo guarda y corre todos un espacio sacando al quinto
 
             puntajes['Scores'] = [self.score] + puntajes['Scores'][:-1]
-            puntajes["Nombres"] = [name] + puntajes["Nombres"][:-1]
+            puntajes["Nombres"] = [self.name] + puntajes["Nombres"][:-1]
             with open('puntajes.json','w') as file:
                 json.dump(puntajes,file)
         elif self.score == puntajes['Scores'][0]: #si es igual no lo guarda 
@@ -502,7 +512,7 @@ class Game:
         elif self.score>puntajes['Scores'][1]: #si es mayor al segundo deja al primero y corre los demas un espacio
 
             puntajes['Scores'] = puntajes['Scores'][0:1] + [self.score] + puntajes['Scores'][1:-1]
-            puntajes["Nombres"] = puntajes["Nombres"][0:1] + [name] + puntajes["Nombres"][1:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:1] + [self.name] + puntajes["Nombres"][1:-1]
             with open('puntajes.json','w') as file:
                 json.dump(puntajes,file)
         elif self.score == puntajes['Scores'][1]: #si es igual no lo guarda
@@ -511,7 +521,7 @@ class Game:
         elif self.score>puntajes['Scores'][2]: #si es mayor al tercero deja el 1 y 2 y corre los demas un espacio
 
             puntajes['Scores'] = puntajes['Scores'][0:2] + [self.score] + puntajes['Scores'][2:-1]
-            puntajes["Nombres"] = puntajes["Nombres"][0:2] + [name] + puntajes["Nombres"][2:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:2] + [self.name] + puntajes["Nombres"][2:-1]
             with open('puntajes.json','w') as file:
                 json.dump(puntajes,file)
         elif self.score == puntajes['Scores'][2]: #si es igual no lo guarda
@@ -520,7 +530,7 @@ class Game:
         elif self.score>puntajes['Scores'][3]: #si es mayor al cuarto deja los primeros y corre un espacio
 
             puntajes['Scores'] = puntajes['Scores'][0:3] + [self.score] + puntajes['Scores'][3:-1]
-            puntajes["Nombres"] = puntajes["Nombres"][0:3] + [name] + puntajes["Nombres"][3:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:3] + [self.name] + puntajes["Nombres"][3:-1]
             with open('puntajes.json','w') as file:
                 json.dump(puntajes,file)
         elif self.score == puntajes['Scores'][3]: #si es igual no lo guarda
@@ -529,7 +539,7 @@ class Game:
         elif self.score>puntajes['Scores'][4]: #si es mayor al ultimo lo reemplaza
 
             puntajes['Scores'] = puntajes['Scores'][0:4] + [self.score]
-            puntajes["Nombres"] = puntajes["Nombres"][0:4] + [name]
+            puntajes["Nombres"] = puntajes["Nombres"][0:4] + [self.name]
             with open('puntajes.json','w') as file:
                 json.dump(puntajes,file)
         elif self.score == puntajes['Scores'][4]:#si es igual no se guarda
@@ -541,7 +551,7 @@ class Game:
         if self.score2>puntajes['Scores'][0]: #si el puntaje es mayor al mas alto lo guarda y corre todos un espacio sacando al quinto
 
             puntajes['Scores'] = [self.score2] + puntajes['Scores'][:-1]
-            puntajes["Nombres"] = [name] + puntajes["Nombres"][:-1]
+            puntajes["Nombres"] = [self.name2] + puntajes["Nombres"][:-1]
             with open('puntajes.json','w') as file:
                 json.dump(puntajes,file)
         elif self.score2 == puntajes['Scores'][0]: #si es igual no lo guarda 
@@ -550,7 +560,7 @@ class Game:
         elif self.score2>puntajes['Scores'][1]: #si es mayor al segundo deja al primero y corre los demas un espacio
 
             puntajes['Scores'] = puntajes['Scores'][0:1] + [self.score2] + puntajes['Scores'][1:-1]
-            puntajes["Nombres"] = puntajes["Nombres"][0:1] + [name] + puntajes["Nombres"][1:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:1] + [self.name2] + puntajes["Nombres"][1:-1]
             with open('puntajes.json','w') as file:
                 json.dump(puntajes,file)
         elif self.score2 == puntajes['Scores'][1]: #si es igual no lo guarda
@@ -559,7 +569,7 @@ class Game:
         elif self.score2>puntajes['Scores'][2]: #si es mayor al tercero deja el 1 y 2 y corre los demas un espacio
 
             puntajes['Scores'] = puntajes['Scores'][0:2] + [self.score2] + puntajes['Scores'][2:-1]
-            puntajes["Nombres"] = puntajes["Nombres"][0:2] + [name] + puntajes["Nombres"][2:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:2] + [self.name2] + puntajes["Nombres"][2:-1]
             with open('puntajes.json','w') as file:
                 json.dump(puntajes,file)
         elif self.score2 == puntajes['Scores'][2]: #si es igual no lo guarda
@@ -568,7 +578,7 @@ class Game:
         elif self.score2>puntajes['Scores'][3]: #si es mayor al cuarto deja los primeros y corre un espacio
 
             puntajes['Scores'] = puntajes['Scores'][0:3] + [self.score2] + puntajes['Scores'][3:-1]
-            puntajes["Nombres"] = puntajes["Nombres"][0:3] + [name] + puntajes["Nombres"][3:-1]
+            puntajes["Nombres"] = puntajes["Nombres"][0:3] + [self.name2] + puntajes["Nombres"][3:-1]
             with open('puntajes.json','w') as file:
                 json.dump(puntajes,file)
         elif self.score2 == puntajes['Scores'][3]: #si es igual no lo guarda
@@ -577,7 +587,7 @@ class Game:
         elif self.score2>puntajes['Scores'][4]: #si es mayor al ultimo lo reemplaza
 
             puntajes['Scores'] = puntajes['Scores'][0:4] + [self.score2]
-            puntajes["Nombres"] = puntajes["Nombres"][0:4] + [name]
+            puntajes["Nombres"] = puntajes["Nombres"][0:4] + [self.name2]
             with open('puntajes.json','w') as file:
                 json.dump(puntajes,file)
         elif self.score2 == puntajes['Scores'][4]:#si es igual no se guarda
