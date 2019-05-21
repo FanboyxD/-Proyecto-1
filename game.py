@@ -359,23 +359,33 @@ class Game:
                     self.player.Brake = False
 
 
-            #Zonas dañinas para el jugador (6 total)
+            #Zonas dañinas para el jugador (8 total)
             if 100 <= self.player.x <= 200 and 100 <= self.player.y <= 200: #medidas de las zonas dañinas
-                self.score -= 1 #quita un pto y continua quitando si se queda en la zona 
+                self.score -= 1 #quita un pto y continua quitando si se queda en la zona
+
             if 500 <= self.player.x <= 600 and 700 <= self.player.y <= 800:
                 self.score -= 1
 
             if 650 <= self.player.x <= 750 and 300 <= self.player.y <= 400:
                 self.score -= 1
+                pygame.time.delay(50)
 
             if 1100 <= self.player.x <= 1200 and 400 <= self.player.y <= 500:
                 self.score -= 1
 
             if 1275 <= self.player.x <= 1375 and 620 <= self.player.y <= 720:
                 self.score -= 1
+                pygame.time.delay(50)
 
             if 1405 <= self.player.x <= 1505 and 222 <= self.player.y <= 322:
                 self.score -= 1
+
+            if 280 <= self.player.x <= 380 and 540 <= self.player.y <= 640:
+                self.score -= 1
+
+            if 1750 <= self.player.x <= 1850 and 710 <= self.player.y <= 810:
+                self.score -= 1
+                pygame.time.delay(50)
 
             #Zona de banderas (requisito para la meta,se encuentran en las esquinas)
             if 0 <= self.player.x <= 200 and 0 <= self.player.y <= 200: #medidas de los espacios para recoger la bandera
@@ -430,7 +440,7 @@ class Game:
                 self.highscore() #llama al guardado de scores para el jugador1 y 2
                 self.player.x = 60 #saca al jugador de la zona para evitar lag
                 self.player.y = 410
-                pygame.time.delay(10000) #Espera un tiempo 
+                pygame.time.delay(1000) #Espera un tiempo 
                 run = False #luego cierra el juego (justo antes de cerrase da un pequeño lagaso)
 
             if self.score2 >= 350 and self.banderas2 == 4 and 860 <= self.player2.x <= 1060 and 400 <= self.player2.y <= 600:#en caso de ganar el jugador2
@@ -619,16 +629,20 @@ class Canvas:
         crater = pygame.image.load('images/crater.png')
         transparencia = crater.get_at((0,0))
         crater.set_colorkey(transparencia,RLEACCEL)
+        cactus = pygame.image.load(os.path.join("images","cactus.png"))
+        rocas = pygame.image.load(os.path.join("images","rocks.png"))
         bandera = pygame.image.load('images/bandera.png')
         meta = pygame.image.load('images/meta.png')
         self.screen.fill((215,150,55)) #Color de relleno
         #se dibujan las zonas de peligro
-        self.screen.blit(crater,(100,100))
+        self.screen.blit(rocas,(100,100))
         self.screen.blit(crater,(500,700))
-        self.screen.blit(crater,(650,300))
+        self.screen.blit(cactus,(650,300))
         self.screen.blit(crater,(1100,400))
-        self.screen.blit(crater,(1275,620))
+        self.screen.blit(cactus,(1275,620))
         self.screen.blit(crater,(1405,222))
+        self.screen.blit(rocas,(280,540))
+        self.screen.blit(cactus,(1750,710))        
         #se dibujan las banderas
         self.screen.blit(bandera,(0,0))
         self.screen.blit(bandera,(1720,0))
