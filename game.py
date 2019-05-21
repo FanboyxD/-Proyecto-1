@@ -6,6 +6,8 @@ import os
 import random
 import sys
 import _thread
+import threading
+from threading import Thread
 import time
 import json
 from threading import Timer
@@ -25,12 +27,15 @@ moving = pygame.mixer.Sound("sonidos/car_moving.wav")
 brake = pygame.mixer.Sound("sonidos/car_brake.wav")
 
 #-------------------------------Jugador---------------------------------------
-class player():
+class player(threading.Thread,object):
     width = height = 50 #Ancho y alto del jugador
     def __init__(self, startx, starty, color=(255,0,0)): #coordenadas iniciales y color
+        threading.Thread.__init__(self,name="player",target=enemy.draw,args=(self))
+        threading.Thread.__init__(self,name="player",target=enemy.move,args=(self))
+        threading.Thread.__init__(self,name="player",target=enemy.hit,args=(self))
         self.x = startx     # se declaran las variables de coord, veloc de movimiento, y que inicie quieto
         self.y = starty
-        self.velocity = 10
+        self.velocity = 6
         self.color = color
         self.left = False
         self.right = False
@@ -71,7 +76,7 @@ class player():
         pygame.display.update()
         i = 0
         while i < 300:
-            pygame.time.delay(10)
+            pygame.time.delay(1)
             i += 1
             for event in pygame.event.get():
             	if event.type == pygame.QUIT:
@@ -79,11 +84,13 @@ class player():
             		pygame.quit()
 
 #------------------------------Enemigos------------------------------------------------------------
-class enemy(object): #imagenes del enemigo
+class enemy(threading.Thread,object): #imagenes del enemigo
     walkRight = [pygame.image.load("images/Enemy sprites Right.png")]
     walkLeft = [pygame.image.load("images/Enemy sprites Left.png")]
-    
     def __init__(self, x, y, width, height, end1, end2): #pos x/y, Ancho x alto y limite maximo de los bordes del eje x
+        threading.Thread.__init__(self,name="enemy",target=enemy.draw,args=(self))
+        threading.Thread.__init__(self,name="enemy",target=enemy.move,args=(self))
+        threading.Thread.__init__(self,name="enemy",target=enemy.hit,args=(self))
         self.x = x
         self.y = y
         self.width = width 
@@ -109,6 +116,8 @@ class enemy(object): #imagenes del enemigo
             pygame.draw.rect(win,(0,0,0),(self.hitbox[0],self.hitbox[1]-20,50,10)) #dimensiones de la barra de vida del enemigo
             pygame.draw.rect(win,(0,255,0),(self.hitbox[0],self.hitbox[1]-20,50-(5*(8-self.health)),10))#lo que se le rebaja de vida al enemigo
             self.hitbox = (self.x+0,self.y+6,35,20)
+
+            #pygame.draw.rect(win,(255,0,0),self.hitbox,2)
 
     def move(self):
         if self.vel > 0:  # Si se mueve a la derecha
@@ -148,6 +157,7 @@ class obstacles(object):
             self.count = 0
         win.blit(self.img[self.count], (self.x,self.y))#dibuja el numero de sprite que se le indique
         self.count += 1
+        #pygame.draw.rect(win,(255,0,0),self.hitbox,2)
     def collide(self,rect): #colision del obstaculo
         if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0]+self.hitbox[2]:
             if rect[1] < self.hitbox[3]:
@@ -159,6 +169,7 @@ class cactus(obstacles): #cactus que forma parte de los obstaculos
     def draw(self,win): #dibujado 
         self.hitbox = (self.x,self.y,self.width-20,self.height-280)
         win.blit(self.img,(self.x,self.y))
+        #pygame.draw.rect(win,(255,0,0),self.hitbox,2)
     def collide(self,rect): #colision
         self.hitbox = (self.x,self.y,self.width-20,self.height-280)        
         if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0]+self.hitbox[2]:
@@ -171,6 +182,7 @@ class rocks(obstacles): #rocas que son parte de los obstaculos
     def draw(self,win): #dibuja la roca
         self.hitbox = (self.x,self.y+25,self.width-28,self.height-90)
         win.blit(self.img,(self.x,self.y))
+        #pygame.draw.rect(win,(255,0,0),self.hitbox,2)
     def collide(self,rect):#colision con la roca
         self.hitbox = (self.x,self.y+25,self.width-28,self.height-90)
         if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0]+self.hitbox[2]:
@@ -192,9 +204,13 @@ class projectile(object): #balas del jugador
         pygame.draw.circle(win, self.color, (self.x,self.y),self.radius)
 
 #---------------------------Juego------------------------------------------------------------------
-class Game:
+class Game(threading.Thread):
 
     def __init__(self, w, h,name):#se define ancho x alto, se importa la red del cliente, se establece la pos inicial de los jugadores
+        threading.Thread.__init__(self,name="Game",target=Game.run,args=(self))
+        threading.Thread.__init__(self,name="Game",target=Game.send_data,args=(self))
+        threading.Thread.__init__(self,name="Game",target=Game.parse_data,args=(self))
+        threading.Thread.__init__(self,name="Game",target=Game.parse_data2,args=(self))
         #Variables necesarias para el puntaje y titulo de la ventana
         self.net = Network()
         self.score = 0 #Score del jugador1
@@ -213,7 +229,14 @@ class Game:
         self.player2 = player(60,460)
         self.bullet2 = projectile(-10,round(self.player2.y + 17),6,(0,15,240),0) #diparo enemigo 
         self.canvas = Canvas(self.width, self.height, "Dakar Death")
-        self.police = enemy(100, 500, 35, 30, 0, 1920) #enemigo
+        self.police = enemy(100, 500, 35, 30, 0, 1920) #enemigos
+        self.police_2 = enemy(100, 600,35,30, 0, 1920)
+        self.police_3 = enemy(-50,700,35,30, 0, 1920)
+        self.police_4 = enemy(-50,200,35,30, 0, 1920)
+        self.police_5 = enemy(-50, 500, 35, 30, 0, 1920)
+        self.police_6 = enemy(-50, 600,35,30, 0, 1920)
+        self.police_7 = enemy(-50,800,35,30, 0, 1920)
+        self.police_8 = enemy(-50,100,35,30, 0, 1920)
         self.pausado = 0
 
     def run(self): #Corre el juego
@@ -234,12 +257,41 @@ class Game:
             seconds=(pygame.time.get_ticks()-start_ticks)/1000 #calculate how many seconds
             clock.tick(144) #tiempo en ms de refresco de la ventana
     
-            if seconds>120: #Tiempo antes de subir de nivel
+            if self.Level == 1:
+                self.player.velocity = 8
+            if self.Level == 2:
+                self.player.velocity = 10
+            if self.Level == 3:
+                self.player.velocity = 12
+                
+            if self.police_3.visible == True:# Regeneracion de vida segun el numero de enemigo, y limite de cada uno
+                if self.police_3.health < 10:
+                    self.police_3.health += 0.02
+                    self.police_4.health += 0.02
+                else:
+                    self.police_3.health -= 1
+                    self.police_4.health -= 1  
+            if self.police_5.visible == True:
+                if self.police_5.health < 20:
+                    self.police_5.health += 0.02
+                    self.police_6.health += 0.02
+                else:
+                    self.police_5.health -= 1
+                    self.police_6.health -= 1
+            if self.police_7.visible == True:
+                if self.police_7.health < 30:
+                    self.police_7.health += 0.02
+                    self.police_8.health += 0.02
+                else:
+                    self.police_7.health -= 1
+                    self.police_8.health -= 1
+
+            if seconds>20: #Tiempo antes de subir de nivel
                 self.Level += 1 #Aumenta la variable de nivel
     
             for objectt in objects: #Borra los obstaculos cuando salen de la pantalla
                 if objectt.collide(self.player.hitbox):
-                    pygame.time.delay(500)
+                    pygame.time.delay(1)
                     self.score -= 10
                 objectt.x -= 1.4
                 if objectt.x < -objectt.width * -1:
@@ -256,8 +308,7 @@ class Game:
                         objects.append(obstacles(1920,400,64,64))#coordenadas de spawn de los muros
                     else:
                         objects.append(cactus(1920,600,48,320)) #coordenadas de spawn de los cactus
-                        objects.append(rocks(1920,200,64,64))
-                        
+                        objects.append(rocks(1920,200,64,64))               
 
             if self.police.visible == True: # se define el choque entre el jugador y el enemigo por medio de las hitbox
                 if self.player.hitbox[1] < self.police.hitbox[1]+self.police.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > self.police.hitbox[1]: #Rango donde el judagor recibe daño
@@ -266,6 +317,83 @@ class Game:
                         crashSound.play()
                         self.player.hit(self.canvas.get_canvas())
                         self.score -= 50 #quita 50 ptos
+
+            if self.police_2.visible == True:
+                if self.player.hitbox[1] < self.police_2.hitbox[1]+self.police_2.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > self.police_2.hitbox[1]: #Rango donde el judagor recibe daño
+                    if self.player.hitbox[0] + self.player.hitbox[2] > self.police_2.hitbox[0] and self.player.hitbox[0] < self.police_2.hitbox[0] + self.police_2.hitbox[2]:#Rango donde el judagor recibe daño
+                        moving.stop()
+                        crashSound.play()
+                        self.player.hit(self.canvas.get_canvas())
+                        font1 = pygame.font.SysFont("comicsans",100)
+                        perdida = font1.render("-5",1,(255,0,0))
+                        self.canvas.get_canvas().blit(perdida,((850,500)))
+                        self.score -= 50
+                        
+            if self.police_3.visible == True:
+                if self.player.hitbox[1] < self.police_3.hitbox[1]+self.police_3.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > self.police_3.hitbox[1]: #Rango donde el judagor recibe daño
+                    if self.player.hitbox[0] + self.player.hitbox[2] > self.police_3.hitbox[0] and self.player.hitbox[0] < self.police_3.hitbox[0] + self.police_3.hitbox[2]:#Rango donde el judagor recibe daño
+                        moving.stop()
+                        crashSound.play()
+                        self.player.hit(self.canvas.get_canvas())
+                        font1 = pygame.font.SysFont("comicsans",100)
+                        perdida = font1.render("-5",1,(255,0,0))
+                        self.canvas.get_canvas().blit(perdida,((850,500)))
+                        self.score -= 50
+
+            if self.police_4.visible == True:
+                if self.player.hitbox[1] < self.police_4.hitbox[1]+self.police_4.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > self.police_4.hitbox[1]: #Rango donde el judagor recibe daño
+                    if self.player.hitbox[0] + self.player.hitbox[2] > self.police_4.hitbox[0] and self.player.hitbox[0] < self.police_4.hitbox[0] + self.police_4.hitbox[2]:#Rango donde el judagor recibe daño
+                        moving.stop()
+                        crashSound.play()
+                        self.player.hit(self.canvas.get_canvas())
+                        font1 = pygame.font.SysFont("comicsans",100)
+                        perdida = font1.render("-5",1,(255,0,0))
+                        self.canvas.get_canvas().blit(perdida,((850,500)))
+                        self.score -= 50
+
+            if self.police_5.visible == True:
+                if self.player.hitbox[1] < self.police_5.hitbox[1]+self.police_5.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > self.police_5.hitbox[1]: #Rango donde el judagor recibe daño
+                    if self.player.hitbox[0] + self.player.hitbox[2] > self.police_5.hitbox[0] and self.player.hitbox[0] < self.police_5.hitbox[0] + self.police_5.hitbox[2]:#Rango donde el judagor recibe daño
+                        moving.stop()
+                        crashSound.play()
+                        self.player.hit(self.canvas.get_canvas())
+                        font1 = pygame.font.SysFont("comicsans",100)
+                        perdida = font1.render("-5",1,(255,0,0))
+                        self.canvas.get_canvas().blit(perdida,((850,500)))
+                        self.score -= 50
+
+            if self.police_6.visible == True:
+                if self.player.hitbox[1] < self.police_6.hitbox[1]+self.police_6.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > self.police_6.hitbox[1]: #Rango donde el judagor recibe daño
+                    if self.player.hitbox[0] + self.player.hitbox[2] > self.police_6.hitbox[0] and self.player.hitbox[0] < self.police_6.hitbox[0] + self.police_6.hitbox[2]:#Rango donde el judagor recibe daño
+                        moving.stop()
+                        crashSound.play()
+                        self.player.hit(self.canvas.get_canvas())
+                        font1 = pygame.font.SysFont("comicsans",100)
+                        perdida = font1.render("-5",1,(255,0,0))
+                        self.canvas.get_canvas().blit(perdida,((850,500)))
+                        self.score -= 50
+
+            if self.police_7.visible == True:
+                if self.player.hitbox[1] < self.police_7.hitbox[1]+self.police_7.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > self.police_7.hitbox[1]: #Rango donde el judagor recibe daño
+                    if self.player.hitbox[0] + self.player.hitbox[2] > self.police_7.hitbox[0] and self.player.hitbox[0] < self.police_7.hitbox[0] + self.police_7.hitbox[2]:#Rango donde el judagor recibe daño
+                        moving.stop()
+                        crashSound.play()
+                        self.player.hit(self.canvas.get_canvas())
+                        font1 = pygame.font.SysFont("comicsans",100)
+                        perdida = font1.render("-5",1,(255,0,0))
+                        self.canvas.get_canvas().blit(perdida,((850,500)))
+                        self.score -= 50
+
+            if self.police_8.visible == True:
+                if self.player.hitbox[1] < self.police_8.hitbox[1]+self.police_8.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > self.police_8.hitbox[1]: #Rango donde el judagor recibe daño
+                    if self.player.hitbox[0] + self.player.hitbox[2] > self.police_8.hitbox[0] and self.player.hitbox[0] < self.police_8.hitbox[0] + self.police_8.hitbox[2]:#Rango donde el judagor recibe daño
+                        moving.stop()
+                        crashSound.play()
+                        self.player.hit(self.canvas.get_canvas())
+                        font1 = pygame.font.SysFont("comicsans",100)
+                        perdida = font1.render("-5",1,(255,0,0))
+                        self.canvas.get_canvas().blit(perdida,((850,500)))
+                        self.score -= 50
    
             for bullet in bullets: #analisa cada bala
                 if self.police.visible == True: #define el choque de la bala contra el enemigo
@@ -274,6 +402,75 @@ class Game:
                             self.police.hit() #llama a la funcion hit del enemigo y destruye la bala
                             bullets.pop(bullets.index(bullet))
                             self.score += 50 #suma 75 ptos
+                            hitSound.play()
+                            moving.stop() #sonidos
+            for bullet in bullets: #analisa cada bala
+                if self.police_2.visible == True:
+                    if bullet.y - bullet.radius < self.police_2.hitbox[1]+self.police_2.hitbox[3] and bullet.y + bullet.radius > self.police_2.hitbox[1]:#Rango para golpear al enemigo
+                        if bullet.x + bullet.radius > self.police_2.hitbox[0] and bullet.x - bullet.radius < self.police_2.hitbox[0] + self.police_2.hitbox[2]:#Rango para golpear al enemigo
+                            self.police_2.hit()
+                            bullets.pop(bullets.index(bullet))
+                            self.score += 75
+                            hitSound.play()
+                            moving.stop() #sonidos
+
+            for bullet in bullets: #analisa cada bala
+                if self.police_3.visible == True:
+                    if bullet.y - bullet.radius < self.police_3.hitbox[1]+self.police_3.hitbox[3] and bullet.y + bullet.radius > self.police_3.hitbox[1]:#Rango para golpear al enemigo
+                        if bullet.x + bullet.radius > self.police_3.hitbox[0] and bullet.x - bullet.radius < self.police_3.hitbox[0] + self.police_3.hitbox[2]:#Rango para golpear al enemigo
+                            self.police_3.hit()
+                            bullets.pop(bullets.index(bullet))
+                            self.score += 75
+                            hitSound.play()
+                            moving.stop() #sonidos
+
+            for bullet in bullets: #analisa cada bala
+                if self.police_4.visible == True:
+                    if bullet.y - bullet.radius < self.police_4.hitbox[1]+self.police_4.hitbox[3] and bullet.y + bullet.radius > self.police_4.hitbox[1]:#Rango para golpear al enemigo
+                        if bullet.x + bullet.radius > self.police_4.hitbox[0] and bullet.x - bullet.radius < self.police_4.hitbox[0] + self.police_4.hitbox[2]:#Rango para golpear al enemigo
+                            self.police_4.hit()
+                            bullets.pop(bullets.index(bullet))
+                            self.score += 75
+                            hitSound.play()
+                            moving.stop() #sonidos
+
+            for bullet in bullets: #analisa cada bala
+                if self.police_5.visible == True:
+                    if bullet.y - bullet.radius < self.police_5.hitbox[1]+self.police_5.hitbox[3] and bullet.y + bullet.radius > self.police_5.hitbox[1]:#Rango para golpear al enemigo
+                        if bullet.x + bullet.radius > self.police_5.hitbox[0] and bullet.x - bullet.radius < self.police_5.hitbox[0] + self.police_5.hitbox[2]:#Rango para golpear al enemigo
+                            self.police_5.hit()
+                            bullets.pop(bullets.index(bullet))
+                            self.score += 75
+                            hitSound.play()
+                            moving.stop() #sonidos
+
+            for bullet in bullets: #analisa cada bala
+                if self.police_6.visible == True:
+                    if bullet.y - bullet.radius < self.police_6.hitbox[1]+self.police_6.hitbox[3] and bullet.y + bullet.radius > self.police_6.hitbox[1]:#Rango para golpear al enemigo
+                        if bullet.x + bullet.radius > self.police_6.hitbox[0] and bullet.x - bullet.radius < self.police_6.hitbox[0] + self.police_6.hitbox[2]:#Rango para golpear al enemigo
+                            self.police_6.hit()
+                            bullets.pop(bullets.index(bullet))
+                            self.score += 75
+                            hitSound.play()
+                            moving.stop() #sonidos
+
+            for bullet in bullets: #analisa cada bala
+                if self.police_7.visible == True:
+                    if bullet.y - bullet.radius < self.police_7.hitbox[1]+self.police_7.hitbox[3] and bullet.y + bullet.radius > self.police_7.hitbox[1]:#Rango para golpear al enemigo
+                        if bullet.x + bullet.radius > self.police_7.hitbox[0] and bullet.x - bullet.radius < self.police_7.hitbox[0] + self.police_7.hitbox[2]:#Rango para golpear al enemigo
+                            self.police_7.hit()
+                            bullets.pop(bullets.index(bullet))
+                            self.score += 75
+                            hitSound.play()
+                            moving.stop() #sonidos
+
+            for bullet in bullets: #analisa cada bala
+                if self.police_8.visible == True:
+                    if bullet.y - bullet.radius < self.police_8.hitbox[1]+self.police_8.hitbox[3] and bullet.y + bullet.radius > self.police_8.hitbox[1]:#Rango para golpear al enemigo
+                        if bullet.x + bullet.radius > self.police_8.hitbox[0] and bullet.x - bullet.radius < self.police_8.hitbox[0] + self.police_8.hitbox[2]:#Rango para golpear al enemigo
+                            self.police_8.hit()
+                            bullets.pop(bullets.index(bullet))
+                            self.score += 75
                             hitSound.play()
                             moving.stop() #sonidos
                 if bullet.x < 1920 and bullet.x > 0: #En caso de estar en la ventana se mueve la bala
@@ -426,7 +623,18 @@ class Game:
             self.bullet2.x, self.score2, self.banderas2, self.name2, self.pausado = self.parse_data2(self.send_data())
             self.canvas.draw_background() #Dibuja el fondo
             self.player.draw(self.canvas.get_canvas())#Dibuja al jugador 1
-            self.police.draw(self.canvas.get_canvas())#dibuja al enemigo
+            if self.Level >= 1: #dibuja a los enemigos
+                self.police.draw(self.canvas.get_canvas())
+                self.police_2.draw(self.canvas.get_canvas())
+                if self.police_2.visible == False:
+                    self.police_3.draw(self.canvas.get_canvas())
+                    self.police_4.draw(self.canvas.get_canvas())
+                if self.police_4.visible == False:
+                    self.police_5.draw(self.canvas.get_canvas())
+                    self.police_6.draw(self.canvas.get_canvas())
+                if self.police_6.visible == False:
+                    self.police_7.draw(self.canvas.get_canvas())
+                    self.police_8.draw(self.canvas.get_canvas())
             for bullet in bullets:#dibuja las balas que existan
                 bullet.draw(self.canvas.get_canvas())
             for x in objects:
@@ -455,6 +663,8 @@ class Game:
 
             text = font.render("Score: "+str(self.score),1,(255,0,0))#Score que se muestra en pantalla
             self.canvas.get_canvas().blit(text,((850,30)))
+            text2 = font.render("Banderas: "+str(self.banderastot),1,(255,0,0))#Banderas que se muestra en pantalla
+            self.canvas.get_canvas().blit(text2,((650,30)))
             timer = font.render("Next level in: "+str(seconds),1,(255,0,0))
             self.canvas.get_canvas().blit(timer,((1000,30)))
 
@@ -470,6 +680,9 @@ class Game:
         data = str(self.net.id) + ":" + str(self.player.x) + "," + str(self.player.y) + ":" + str(self.bulletx) + "," + str(self.score) + "," + str(self.banderastot) + "," + str(self.name) + "," + str(self.pausado)
         reply = self.net.send(data) #Envia los datos
         return reply
+        t1 = threading.Thread(name = "hilo1", target = send_data, args=())
+        t1.start()#comienza hilo
+        t1.join()#termina hilo
 
     @staticmethod
     def parse_data(data): # Analisa los datos para el jugador 2
@@ -478,6 +691,9 @@ class Game:
             return int(d[0]), int(d[1]) #Pos eje x/y
         except:
             return 0,0 #Si no hay datos la pos es 0,0
+        t2 = threading.Thread(name = "hilo2", target = parse_data, args=())
+        t2.start()#comienza hilo
+        t2.join()#termina hilo
 
     @staticmethod
     def parse_data2(data): # Analisa los datos para las balas del jugador2
@@ -486,6 +702,9 @@ class Game:
             return int(dat[0]), int(dat[1]), int(dat[2]), str(dat[3]), int(dat[4]) #datos recividos pos jugador, pos balas, banderas,nombre y pausado
         except:
             return -10,0,0," ",0 #Si no hay datos la pos es 0,0
+        t3 = threading.Thread(name = "hilo3", target = send_data, args=())
+        t3.start()#comienza hilo
+        t3.join()#termina hilo
 
     def pausa(self): #funcionn que se encarga de pausar el juego
         self.pausado = 1
@@ -505,6 +724,9 @@ class Game:
             textopausa = font.render("Pausa, para reanudar presione <r>",1,(200,10,10))#muestra informacion en la pantalla del jugador
             self.canvas.get_canvas().blit(textopausa,((650,100)))
             self.canvas.update()# actualiza la ventana
+        t4 = threading.Thread(name = "hilo4", target = pausa, args=())
+        t4.start()#comienza hilo
+        t4.join()#termina hilo
 
     def highscore(self): #Funcion que analiza el puntaje
         with open('puntajes.json') as file: #abre el doc
@@ -602,7 +824,9 @@ class Game:
                 json.dump(puntajes,file)
         elif self.score2 == puntajes['Scores'][4]:#si es igual no se guarda
             pass
-
+        t5 = threading.Thread(name = "hilo5", target = highscore, args=())
+        t5.start()#comienza hilo
+        t5.join()#termina hilo
 #------------------------------------------Canvas---------------------------------------------------------
 class Canvas:
 
