@@ -710,6 +710,7 @@ class Game(threading.Thread):
         self.pausado = 1
         font = pygame.font.SysFont("comicsans",30,True,True)
         while self.pausado == 1:#mientras este pausado
+            self.bullet2.x, self.score2, self.banderas2, self.name2, self.pausado = self.parse_data2(self.send_data())
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: #acepta el evento quitar
                     run = False
@@ -724,9 +725,6 @@ class Game(threading.Thread):
             textopausa = font.render("Pausa, para reanudar presione <r>",1,(200,10,10))#muestra informacion en la pantalla del jugador
             self.canvas.get_canvas().blit(textopausa,((650,100)))
             self.canvas.update()# actualiza la ventana
-        t4 = threading.Thread(name = "hilo4", target = pausa, args=())
-        t4.start()#comienza hilo
-        t4.join()#termina hilo
 
     def highscore(self): #Funcion que analiza el puntaje
         with open('puntajes.json') as file: #abre el doc
