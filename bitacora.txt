@@ -1,0 +1,5 @@
+3/6/2019
+10:00 - 15:00
+Se contruye un programa de arduino para utilizar un joystick y un boton para el juego. Además se investiga como utilizar la libreria
+serial de python y como manejar la info que envia el arduino
+Se opta por tratar la informacion de arduino como si fuera un archivo json 
