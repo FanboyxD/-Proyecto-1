@@ -56,3 +56,7 @@ Se solucionan problemas de lag y del erroneo dibujado de los enemigos. Además s
 20/05/2019
 13:00 - 23:00
 Se añaden datos extra para enviar por el socket y se corrigen errores con el score y también se añade la pausa, y se finalizan los documentos
+
+05/06/2019
+18:00 - 22:30
+Se agregan los botones de guardar score y banderas de la partida actual y poder cargarlos en otra partida.
