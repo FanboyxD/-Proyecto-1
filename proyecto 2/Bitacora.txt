@@ -59,4 +59,4 @@ Se añaden datos extra para enviar por el socket y se corrigen errores con el sc
 
 05/06/2019
 18:00 - 22:30
-Se agregan los botones de guardar score y banderas de la partida actual y poder cargarlos en otra partida.
+Se agregan los botones de guardar score y banderas de la partida actual y poder cargarlos en otra partida, tambien se arreglaron algunos errores que tenia el codigo.
