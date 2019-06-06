@@ -10,6 +10,8 @@ import threading
 from threading import Thread
 import time
 import json
+import pickle
+import gzip
 from threading import Timer
 pygame.init()
 #-------------------------------Sprites---------------------------------------
@@ -238,13 +240,13 @@ class Game(threading.Thread):
         self.police_7 = enemy(-50,800,35,30, 0, 1920)
         self.police_8 = enemy(-50,100,35,30, 0, 1920)
         self.pausado = 0
-
+        
     def run(self): #Corre el juego
         clock = pygame.time.Clock() 
         run = True #inicia el run
         bullets = [] #variable para las balas
         font = pygame.font.SysFont("comicsans",30,True,True)
-
+        
         pygame.time.set_timer(USEREVENT+1,500)
         pygame.time.set_timer(USEREVENT+2,random.randrange(2000,3500))#tiempo en que salen los obstaculos
         shootLoop = 0
@@ -298,7 +300,7 @@ class Game(threading.Thread):
                     objects.pop(objects.index(objectt))
             for event in pygame.event.get(): #analiza cada evento
                 if event.type == pygame.QUIT: #Si es click en la "x" de la ventana, sale del juego
-                    run = False 
+                    run = False            
                 if event.type == USEREVENT+1:
                     self.player.velocity += 1
                     self.player.velocity -=1
@@ -547,6 +549,10 @@ class Game(threading.Thread):
                     brake.play() #sonidos
                 if keys[pygame.K_p]:# con la tecla "p" pausa el juego
                     self.pausa()
+                if keys[pygame.K_g]:# con la tecla "g" guardar el juego
+                    self.save_score()
+                if keys[pygame.K_q]:# con la tecla "q" cargar el juego
+                    self.score_load()
             else:
                 if  self.player.BrakeCount >= -0:
                     self.player.y -= (self.player.BrakeCount * abs(self.player.BrakeCount))
@@ -554,7 +560,6 @@ class Game(threading.Thread):
                 else: 
                     self.player.BrakeCount = 0
                     self.player.Brake = False
-
 
             #Zonas dañinas para el jugador (8 total)
             if 100 <= self.player.x <= 200 and 100 <= self.player.y <= 200: #medidas de las zonas dañinas
@@ -665,7 +670,7 @@ class Game(threading.Thread):
             self.canvas.get_canvas().blit(text,((850,30)))
             text2 = font.render("Banderas: "+str(self.banderastot),1,(255,0,0))#Banderas que se muestra en pantalla
             self.canvas.get_canvas().blit(text2,((650,30)))
-            timer = font.render("Next level in: "+str(seconds),1,(255,0,0))
+            timer = font.render("Every 20 seconds level increase: "+str(seconds),1,(255,0,0))
             self.canvas.get_canvas().blit(timer,((1000,30)))
 
             if self.bullet2.x < 1920 and self.bullet2.x > 0: #En caso de estar en la ventana se mueve la bala
@@ -714,7 +719,6 @@ class Game(threading.Thread):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: #acepta el evento quitar
                     run = False
-
                 keys = pygame.key.get_pressed()
 
                 if keys[pygame.K_ESCAPE]: #con la tecla escape tambien sale
@@ -725,7 +729,23 @@ class Game(threading.Thread):
             textopausa = font.render("Pausa, para reanudar presione <r>",1,(200,10,10))#muestra informacion en la pantalla del jugador
             self.canvas.get_canvas().blit(textopausa,((650,100)))
             self.canvas.update()# actualiza la ventana
-
+            
+    def save_score(self):
+        font = pygame.font.SysFont("comicsans",30,True,True)
+        with gzip.open('save_data/savescore','wb')as file:
+            pickle.dump([self.score,self.banderastot],file)
+        guarda_score = font.render("Se han guardado los datos de la partida actual",1,(200,10,10))#muestra informacion en la pantalla del jugador
+        self.canvas.get_canvas().blit(guarda_score,((650,100)))
+        self.canvas.update()# actualiza la ventana
+        
+    def score_load(self):
+        font = pygame.font.SysFont("comicsans",30,True,True)
+        with gzip.open('save_data/savescore','rb')as file:
+            self.score,self.banderastot = pickle.load(file)
+        carga_score = font.render("Se han cargado los datos de la partida pasada",1,(200,10,10))#muestra informacion en la pantalla del jugador
+        self.canvas.get_canvas().blit(carga_score,((650,100)))
+        self.canvas.update()# actualiza la ventana
+        
     def highscore(self): #Funcion que analiza el puntaje
         with open('puntajes.json') as file: #abre el doc
             puntajes = json.load(file)
@@ -833,7 +853,6 @@ class Canvas:
         self.height = h
         self.screen = pygame.display.set_mode((w,h))
         pygame.display.set_caption(namec)
-
 
     @staticmethod
     def update():
