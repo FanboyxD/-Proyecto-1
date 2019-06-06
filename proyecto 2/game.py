@@ -246,7 +246,6 @@ class Game(threading.Thread):
         run = True #inicia el run
         bullets = [] #variable para las balas
         font = pygame.font.SysFont("comicsans",30,True,True)
-        
         pygame.time.set_timer(USEREVENT+1,500)
         pygame.time.set_timer(USEREVENT+2,random.randrange(2000,3500))#tiempo en que salen los obstaculos
         shootLoop = 0
@@ -551,8 +550,10 @@ class Game(threading.Thread):
                     self.pausa()
                 if keys[pygame.K_g]:# con la tecla "g" guardar el juego
                     self.save_score()
+                    self.save_banderas()
                 if keys[pygame.K_q]:# con la tecla "q" cargar el juego
                     self.score_load()
+                    self.banderas_load()
             else:
                 if  self.player.BrakeCount >= -0:
                     self.player.y -= (self.player.BrakeCount * abs(self.player.BrakeCount))
@@ -677,7 +678,6 @@ class Game(threading.Thread):
                     self.bullet2.draw(self.canvas.get_canvas())
             self.player2.draw(self.canvas.get_canvas()) #dibuja al jugador 2
             self.canvas.update() #actualiza la ventana
-
         pygame.quit()#Elimina la ventana de pygame
 
     def send_data(self): #Envia la pos y otros datos al server
@@ -733,7 +733,7 @@ class Game(threading.Thread):
     def save_score(self):
         font = pygame.font.SysFont("comicsans",30,True,True)
         with gzip.open('save_data/savescore','wb')as file:
-            pickle.dump([self.score,self.banderastot],file)
+            pickle.dump([self.score,self.bandera1,self.bandera2],file)
         guarda_score = font.render("Se han guardado los datos de la partida actual",1,(200,10,10))#muestra informacion en la pantalla del jugador
         self.canvas.get_canvas().blit(guarda_score,((650,100)))
         self.canvas.update()# actualiza la ventana
@@ -741,9 +741,25 @@ class Game(threading.Thread):
     def score_load(self):
         font = pygame.font.SysFont("comicsans",30,True,True)
         with gzip.open('save_data/savescore','rb')as file:
-            self.score,self.banderastot = pickle.load(file)
+            self.score,self.bandera1,self.bandera2 = pickle.load(file)
         carga_score = font.render("Se han cargado los datos de la partida pasada",1,(200,10,10))#muestra informacion en la pantalla del jugador
         self.canvas.get_canvas().blit(carga_score,((650,100)))
+        self.canvas.update()# actualiza la ventana
+        
+    def save_banderas(self):
+        font = pygame.font.SysFont("comicsans",30,True,True)
+        with gzip.open('save_data/savebanderas','wb')as file:
+            pickle.dump([self.bandera3,self.bandera4],file)
+        guarda_bandera = font.render("Se han guardado los datos de la partida actual",1,(200,10,10))#muestra informacion en la pantalla del jugador
+        self.canvas.get_canvas().blit(guarda_bandera,((650,100)))
+        self.canvas.update()# actualiza la ventana
+        
+    def banderas_load(self):
+        font = pygame.font.SysFont("comicsans",30,True,True)
+        with gzip.open('save_data/savebanderas','rb')as file:
+            self.bandera3,self.bandera4 = pickle.load(file)
+        carga_bandera = font.render("Se han cargado los datos de la partida pasada",1,(200,10,10))#muestra informacion en la pantalla del jugador
+        self.canvas.get_canvas().blit(carga_bandera,((650,100)))
         self.canvas.update()# actualiza la ventana
         
     def highscore(self): #Funcion que analiza el puntaje
