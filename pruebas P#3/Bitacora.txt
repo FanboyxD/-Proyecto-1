@@ -1,58 +1,10 @@
-﻿06/05/2019
-19:00 - 21:00
-Se crea un nuevo menu usando como referencia el menu del proyecto anterior. Además se agrega un submenu en la pestaña "file"
-llamado "Highscores" que abre una ventana la cual muestra los puntajes mas altos
+03/06/2019
+10:00 - 15:00
+Se contruye un programa de arduino para utilizar un joystick y un boton para el juego. Adem�s se investiga como utilizar la libreria
+serial de python y como manejar la info que envia el arduino
+Se opta por tratar la informacion de arduino como si fuera un archivo json 
 
-07/05/2019
-14:00 - 21:00
-Investigamos acerca de los sockets e hicimos un programa de chat como ejemplo para el entendimiento de los sockets unido a los hilos. 
-Se investiga sobre como podemos crear una ventana en pygame y que pueda mover el "background" que tiene un tamaño más grande que la ventana
-
-08/05/2019
-14:00 - 22:00
-Comenzamos a programar el juego, le agregamos un background, y sprites de movimiento. implementamos un boton de play
-el cual cierra la ventana del menu y abre la del juego.Despues investigamos como adaptar el servidor al juego
-
-09/05/2019
-14:00 - 20:00
-Se le agregaron disparos al jugador. Se consigue implementar el servidor y los sockets al juego
-
-10/05/2019
-14:00 - 20:00
-Se comienza a adaptar el codigo del juego con el de servidor y cliente. El profesor nos recomendo utilizar el multicast para facilitar la coneccion
-asi que se añade el multicast al juego
-
-11/05/2019
-16:00 - 21:00
-Se le ponen sprites a los jugadores 
-
-12/05/2019
-13:00 - 22:00
-Se añaden disparos y otros ajustes al juego en base a otro codigo que hicimos aparte con pruebas 
-
-14/05/2019
-16:00 - 21:00
-Se inserta el formato de coordenadas al servidor para: el numero de cliente,coord del jugador y coord de las balas enemigas
-
-16/05/2019
-13:00 - 23:00
-Se inicia la documentacion externa del juego
-Se logra que aparescan: el jugador2 y sus disparos en la pantalla del jugador1 
-
-17/05/2019
-19:00 - 23:00
-Se comenta el codigo del juego para la documentacion interna
-Se realizan pruebas con el multicast para intentar adaptarlo al servidor que ya tenemos. Ademas añadimos zonas de peligro para 
-el jugador
-
-18/05/2019
-13:00 - 21:00
-Se adaptan los obtaculos y enemigos creados en el codigo de pruebas 
-
-19/05/2019
-12:00 - 22:00 
-Se solucionan problemas de lag y del erroneo dibujado de los enemigos. Además se añaden las imagenes restantes
-
-20/05/2019
-13:00 - 23:00
-Se añaden datos extra para enviar por el socket y se corrigen errores con el score y también se añade la pausa, y se finalizan los documentos
+05/06/2019 
+18:00 - 22:30 
+Se agregan los botones de guardar score y banderas de la partida actual y poder cargarlos en otra partida, tambien se arreglaron algunos errores que tenia el codigo. 
+Se integran mas botones para el juego y se corrigen errores de la version anterior, como el guardado de scores
