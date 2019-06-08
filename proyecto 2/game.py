@@ -10,11 +10,16 @@ import threading
 from threading import Thread
 import time
 import json
-import pickle
-import gzip
-from multiprocessing import Queue
+import serial
+import pickle 
+import gzip 
+from multiprocessing import Queue 
 from threading import Timer
 pygame.init()
+#------------------------------Puerto-----------------------------------------
+
+Puerto = 'COM7'
+
 #-------------------------------Sprites---------------------------------------
 walkRight = pygame.image.load('images/Right Car.png')
 walkLeft = pygame.image.load('images/Left Car.png')
@@ -33,9 +38,9 @@ brake = pygame.mixer.Sound("sonidos/car_brake.wav")
 class player(threading.Thread,object):
     width = height = 50 #Ancho y alto del jugador
     def __init__(self, startx, starty, color=(255,0,0)): #coordenadas iniciales y color
-        threading.Thread.__init__(self,name="player",target=player.draw,args=(self))
-        threading.Thread.__init__(self,name="player",target=player.move,args=(self))
-        threading.Thread.__init__(self,name="player",target=player.hit,args=(self))
+        threading.Thread.__init__(self,name="player",target=player.draw,args=(self)) 
+        threading.Thread.__init__(self,name="player",target=player.move,args=(self)) 
+        threading.Thread.__init__(self,name="player",target=player.hit,args=(self)) 
         self.x = startx     # se declaran las variables de coord, veloc de movimiento, y que inicie quieto
         self.y = starty
         self.velocity = 6
@@ -144,29 +149,30 @@ class enemy(threading.Thread,object): #imagenes del enemigo
         else:
             self.visible = False
         print("1 hit + 50ptos") #cantidad de puntos obtenidos
-#-----------------------------Obstaculos-----------------------------------------------------------
-class obstacles(object): 
-    img = [pygame.image.load(os.path.join("images","wall.png"))]
-class cactus(obstacles): #cactus que forma parte de los obstaculos
-    img = pygame.image.load(os.path.join("images","cactus.png")) 		
-class rocks(obstacles): #rocas que son parte de los obstaculos
-    img = pygame.image.load(os.path.join("images","rocks.png"))
-
-#------------------------------Balas---------------------------------------------------------------
-class projectile(object): #balas del jugador
-    def __init__(self,x,y,radius,color,facing): #se definen sus coord, radio, color, si van a la izquierda o derecha y a que velocidad 
-        self.x = x
-        self.y = y
-        self.radius = radius
-        self.color = color
-        self.facing = facing
-        self.vel = 15 * facing
-
-    def draw(self,win): #dibuja la bala
-        pygame.draw.circle(win, self.color, (self.x,self.y),self.radius)
-
+#-----------------------------Obstaculos----------------------------------------------------------- 
+class obstacles(object):  
+    img = [pygame.image.load(os.path.join("images","wall.png"))] 
+class cactus(obstacles): #cactus que forma parte de los obstaculos 
+    img = pygame.image.load(os.path.join("images","cactus.png"))         
+class rocks(obstacles): #rocas que son parte de los obstaculos 
+    img = pygame.image.load(os.path.join("images","rocks.png")) 
+ 
+#------------------------------Balas--------------------------------------------------------------- 
+class projectile(object): #balas del jugador 
+    def __init__(self,x,y,radius,color,facing): #se definen sus coord, radio, color, si van a la izquierda o derecha y a que velocidad  
+        self.x = x 
+        self.y = y 
+        self.radius = radius 
+        self.color = color 
+        self.facing = facing 
+        self.vel = 15 * facing 
+ 
+    def draw(self,win): #dibuja la bala 
+        pygame.draw.circle(win, self.color, (self.x,self.y),self.radius) 
+ 
 #---------------------------Juego------------------------------------------------------------------
 class Game(threading.Thread):
+
     def __init__(self, w, h,name):#se define ancho x alto, se importa la red del cliente, se establece la pos inicial de los jugadores
         threading.Thread.__init__(self,name="Game",target=Game.run,args=(self))
         threading.Thread.__init__(self,name="Game",target=Game.send_data,args=(self))
@@ -210,17 +216,22 @@ class Game(threading.Thread):
         self.Level = 1 #nivel inicial
         self.bulletx = -10
         self.bullety = round(self.player2.y + 17)
-        
+        direccion = serial.Serial(Puerto,9600)#Se establece una variable con el puerto y frecuencia para el monitoreo del arduino(Se debe cambiar al puerto al que este conectado el arduino)
         while run:
             clock.tick(144) #tiempo en ms de refresco de la ventana
-            self.seconds = (pygame.time.get_ticks()-self.start_ticks)/1000
-            
+            self.seconds = (pygame.time.get_ticks()-self.start_ticks)/1000 
+            info = direccion.readline()#Se lee lo que resive del arduino
+            try: 
+                jsoninfo = json.loads(info)#se decodifica la informacion como si fuera un archivo json
+            except Exception:
+                jsoninfo = {"x":520,"y":515,"Bshoot":0, "Pause":0, "continue":0, "Saveas":0, "Load":0}
+    
             if self.Level == 1:
-                self.player.velocity = 8
+                self.player.velocity += 2
             if self.Level == 2:
-                self.player.velocity = 10
+                self.player.velocity += 3
             if self.Level == 3:
-                self.player.velocity = 12
+                self.player.velocity += 3
                 
             if self.police_3.visible == True:# Regeneracion de vida segun el numero de enemigo, y limite de cada uno
                 if self.police_3.health < 10:
@@ -244,15 +255,15 @@ class Game(threading.Thread):
                     self.police_7.health -= 1
                     self.police_8.health -= 1
 
-            if self.seconds>20: #Tiempo antes de subir de nivel
+            if self.seconds>20: #Tiempo antes de subir de nivel 
                 self.Level += 1 #Aumenta la variable de nivel
     
             for event in pygame.event.get(): #analiza cada evento
                 if event.type == pygame.QUIT: #Si es click en la "x" de la ventana, sale del juego
-                    run = False            
+                    run = False 
                 if event.type == USEREVENT+1:
                     self.player.velocity += 1
-                    self.player.velocity -=1            
+                    self.player.velocity -=1
 
             if self.police.visible == True: # se define el choque entre el jugador y el enemigo por medio de las hitbox
                 if self.player.hitbox[1] < self.police.hitbox[1]+self.police.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > self.police.hitbox[1]: #Rango donde el judagor recibe daño
@@ -432,9 +443,11 @@ class Game(threading.Thread):
             keys = pygame.key.get_pressed()
 
             if keys[pygame.K_ESCAPE]: #en caso de la tecla escape tambien sale
+                    self.highscore() #guarda los scores
                     run = False
 
-            if keys[pygame.K_c]: #si presiona la tecla "c" dispara una bala(solo una a la vez)
+
+            if jsoninfo["Bshoot"] == 1: #si se presiona el boton se dispara la bala(solo una a la vez)
                 moving.stop() #sonidos
                 bulletSound.play()            
                 if self.player.left: #direccion de la bala
@@ -445,7 +458,17 @@ class Game(threading.Thread):
                     bullets.append(projectile(round(self.player.x + 15),round(self.player.y + 10), 6, (200,10,56),facing))
 
             if not(self.player.Brake):
-                if keys[pygame.K_RIGHT]: #si presiona la flecha derecha
+                if 540 <= jsoninfo["x"] < 1024: #si el eje x del joystick se encuentra entre estos parametros se mueve a la derecha
+                    if 530 <= jsoninfo["x"] < 630: # se modifica la velocidad dependiendo de que tanto se mueva el joystick
+                        self.player.velocity = 5
+                    elif 630 <= jsoninfo["x"] < 730:
+                        self.player.velocity = 8
+                    elif 730 <= jsoninfo["x"] < 830:
+                        self.player.velocity = 11
+                    elif 830 <= jsoninfo["x"] < 930:
+                        self.player.velocity = 14
+                    elif 930 <= jsoninfo["x"] < 1024:
+                        self.player.velocity = 16  
                     if self.player.x <= self.width - self.player.velocity: #Mueve al jugador
                         self.player.move(0)#lo mueve a la derecha
                         self.player.left = False
@@ -454,7 +477,17 @@ class Game(threading.Thread):
                         self.player.down = False
                         moving.play() #sonidos
 
-                if keys[pygame.K_LEFT]: #si presiona la flecha izquierda
+                if 0 <= jsoninfo["x"] < 520: #si esta en estos parametros se mueve a la izquierda
+                    if 415 <= jsoninfo["x"] < 515: # se modifica su velocidad dependiendo de que tanto mueva el joystick
+                        self.player.velocity = 5
+                    elif 315 <= jsoninfo["x"] < 415:
+                        self.player.velocity = 8
+                    elif 215 <= jsoninfo["x"] < 315:
+                        self.player.velocity = 11
+                    elif 115 <= jsoninfo["x"] < 215:
+                        self.player.velocity = 14
+                    elif 0 <= jsoninfo["x"] < 115:
+                        self.player.velocity = 16
                     if self.player.x >= self.player.velocity: #mueve al jugador
                         self.player.move(1) #lo mueve a la iquierda
                         self.player.left = True #sprite de la izquiera
@@ -463,7 +496,17 @@ class Game(threading.Thread):
                         self.player.down = False
                         moving.play() #sonidos
 
-                if keys[pygame.K_UP]: #si presiona la flecha de arriba pasa lo mismo que anteriormente pero con otra direccion
+                if 540 <= jsoninfo["y"] < 1024: #si el eje Y del joystick se encuentra en estos parametros se mueve hacia arriba
+                    if 525 <= jsoninfo["y"] < 625: #Velocidad dependiendo del joystick
+                        self.player.velocity = 5
+                    elif 625 <= jsoninfo["y"] < 725:
+                        self.player.velocity = 8
+                    elif 725 <= jsoninfo["y"] < 825:
+                        self.player.velocity = 11
+                    elif 825 <= jsoninfo["y"] < 925:
+                        self.player.velocity = 14
+                    elif 925 <= jsoninfo["y"] < 1024:
+                        self.player.velocity = 16
                     if self.player.y >= self.player.velocity:
                         self.player.move(2)
                         self.player.left = False
@@ -472,7 +515,17 @@ class Game(threading.Thread):
                         self.player.down = False
                         moving.play() #sonidos
 
-                if keys[pygame.K_DOWN]:# de la misma manera si es hacia abajo
+                if 0 <= jsoninfo["y"] < 510:#Si estan en estos parametros se mueve hacia abajo
+                    if 415 <= jsoninfo["y"] < 510: #velocidad depende de que tanto mueve el joystick
+                        self.player.velocity = 5
+                    elif 315 <= jsoninfo["y"] < 410:
+                        self.player.velocity = 8
+                    elif 215 <= jsoninfo["y"] < 310:
+                        self.player.velocity = 11
+                    elif 115 <= jsoninfo["y"] < 210:
+                        self.player.velocity = 14
+                    elif 0 <= jsoninfo["y"] < 110:
+                        self.player.velocity = 16
                     if self.player.y <= self.height - self.player.velocity:
                         self.player.move(3)
                         self.player.left = False
@@ -481,22 +534,27 @@ class Game(threading.Thread):
                         self.player.down = True
                         moving.play() #sonidos
 
-                if keys[pygame.K_SPACE]:#frenado del auto, sirve para reducir la velocidad del jugador
-                    moving.stop()
+                if keys[pygame.K_SPACE]:#frenado del auto, sirve para reducir la velocidad del jugador, INHABILITADA POR NO SER NECESARIA EN EL CONTROL
+                    moving.stop()  
                     self.player.Brake = True
                     self.player.right = False
                     self.player.left = False
                     self.player.up = True
                     self.player.down = False
                     brake.play() #sonidos
-                if keys[pygame.K_p]:# con la tecla "p" pausa el juego
+
+                if jsoninfo["Pause"] == 1 :# con la tecla "p" pausa el juego
+                    direccion.close() #cierra la conexion del puerto              
                     self.pausa()
-                if keys[pygame.K_g]:# con la tecla "g" guardar el juego
+                    direccion = serial.Serial(Puerto,9600) #luego de quitar la pausa vuelve a iniciar la conexion con el puerto
+                    
+                if jsoninfo["Saveas"] == 1:# con la tecla "g" guardar el juego
                     self.save_score()
-                    self.save_banderas()
-                if keys[pygame.K_q]:# con la tecla "q" cargar el juego
-                    self.score_load()
-                    self.banderas_load()
+                    self.save_banderas() 
+                if jsoninfo["Load"] == 1:# con la tecla "q" cargar el juego 
+                    self.score_load() 
+                    self.banderas_load() 
+
             else:
                 if  self.player.BrakeCount >= -0:
                     self.player.y -= (self.player.BrakeCount * abs(self.player.BrakeCount))
@@ -504,6 +562,7 @@ class Game(threading.Thread):
                 else: 
                     self.player.BrakeCount = 0
                     self.player.Brake = False
+
 
             #Zonas dañinas para el jugador (8 total)
             if 100 <= self.player.x <= 200 and 100 <= self.player.y <= 200: #medidas de las zonas dañinas
@@ -612,13 +671,14 @@ class Game(threading.Thread):
             self.canvas.get_canvas().blit(text,((850,30)))
             text2 = font.render("Banderas: "+str(self.banderastot),1,(255,0,0))#Banderas que se muestra en pantalla
             self.canvas.get_canvas().blit(text2,((650,30)))
-            timer = font.render("Every 20 seconds level increase: "+str(self.seconds),1,(255,0,0))
+            timer = font.render("Every 20 seconds level increase: "+str(self.seconds),1,(255,0,0)) 
             self.canvas.get_canvas().blit(timer,((1000,30)))
 
             if self.bullet2.x < 1920 and self.bullet2.x > 0: #En caso de estar en la ventana se mueve la bala
                     self.bullet2.draw(self.canvas.get_canvas())
             self.player2.draw(self.canvas.get_canvas()) #dibuja al jugador 2
             self.canvas.update() #actualiza la ventana
+
         pygame.quit()#Elimina la ventana de pygame
 
     def send_data(self): #Envia la pos y otros datos al server
@@ -655,48 +715,65 @@ class Game(threading.Thread):
     def pausa(self): #funcionn que se encarga de pausar el juego
         self.pausado = 1
         font = pygame.font.SysFont("comicsans",30,True,True)
+        direccion = serial.Serial(Puerto,9600) #reinicia coneccion con el puerto
         while self.pausado == 1:#mientras este pausado
-            self.bullet2.x, self.score2, self.banderas2, self.name2, self.pausado = self.parse_data2(self.send_data())
+            info = direccion.readline()#Se lee lo que resive del arduino
+            try: 
+                jsoninfo = json.loads(info)#se decodifica la informacion como si fuera un archivo json
+            except Exception:
+                jsoninfo = {"x":520,"y":515,"Bshoot":0, "Pause":0, "continue":0, "Saveas":0, "Load":0}
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: #acepta el evento quitar
                     run = False
+
                 keys = pygame.key.get_pressed()
 
                 if keys[pygame.K_ESCAPE]: #con la tecla escape tambien sale
+                    self.highscore() #guarda el score
                     run = False
 
-                if keys[pygame.K_r]: #reanuda la partida con la tecla "r"
+                if jsoninfo["continue"] == 1: #reanuda la partida con la tecla "r"
+                    direccion.close() #cierra conexion con el puerto 
                     self.pausado = 0                
             textopausa = font.render("Pausa, para reanudar presione <r>",1,(200,10,10))#muestra informacion en la pantalla del jugador
             self.canvas.get_canvas().blit(textopausa,((650,100)))
             self.canvas.update()# actualiza la ventana
-            
-    def save_score(self):
-        font = pygame.font.SysFont("comicsans",30,True,True)
-        with gzip.open('save_data/savescore','wb')as file:
-            pickle.dump([self.score,self.bandera1,self.bandera2],file)
-        guarda_score = font.render("Se han guardado los datos de la partida actual",1,(200,10,10))#muestra informacion en la pantalla del jugador
-        self.canvas.get_canvas().blit(guarda_score,((650,100)))
-        self.canvas.update()# actualiza la ventana
-        
-    def score_load(self):
-        font = pygame.font.SysFont("comicsans",30,True,True)
-        with gzip.open('save_data/savescore','rb')as file:
-            self.score,self.bandera1,self.bandera2 = pickle.load(file)
-        carga_score = font.render("Se han cargado los datos de la partida pasada",1,(200,10,10))#muestra informacion en la pantalla del jugador
-        self.canvas.get_canvas().blit(carga_score,((650,100)))
-        self.canvas.update()# actualiza la ventana
-        
-    def save_banderas(self):
-        font = pygame.font.SysFont("comicsans",30,True,True)
-        with gzip.open('save_data/savebanderas','wb')as file:
-            pickle.dump([self.bandera3,self.bandera4],file)
-        
-    def banderas_load(self):
-        font = pygame.font.SysFont("comicsans",30,True,True)
-        with gzip.open('save_data/savebanderas','rb')as file:
-            self.bandera3,self.bandera4 = pickle.load(file)
-            
+
+
+    def save_score(self): 
+        font = pygame.font.SysFont("comicsans",30,True,True) 
+        with gzip.open('save_data/savescore','wb')as file: 
+            pickle.dump([self.score,self.bandera1,self.bandera2],file) 
+        guarda_score = font.render("Se han guardado los datos de la partida actual",1,(200,10,10))#muestra informacion en la pantalla del jugador 
+        self.canvas.get_canvas().blit(guarda_score,((650,100))) 
+        self.canvas.update()# actualiza la ventana 
+         
+    def score_load(self): 
+        font = pygame.font.SysFont("comicsans",30,True,True) 
+        with gzip.open('save_data/savescore','rb')as file: 
+            self.score,self.bandera1,self.bandera2 = pickle.load(file)  
+        carga_score = font.render("Se han cargado los datos de la partida pasada",1,(200,10,10))#muestra informacion en la pantalla del jugador 
+        self.canvas.get_canvas().blit(carga_score,((650,100))) 
+        self.canvas.update()# actualiza la ventana 
+
+    def save_banderas(self): 
+        font = pygame.font.SysFont("comicsans",30,True,True) 
+        with gzip.open('save_data/savebanderas','wb')as file: 
+            pickle.dump([self.bandera3,self.bandera4],file) 
+        guarda_bandera = font.render("Se han guardado los datos de la partida actual",1,(200,10,10))#muestra informacion en la pantalla del jugador 
+        self.canvas.get_canvas().blit(guarda_bandera,((650,100))) 
+        self.canvas.update()# actualiza la ventana 
+         
+    def banderas_load(self): 
+        font = pygame.font.SysFont("comicsans",30,True,True) 
+        with gzip.open('save_data/savebanderas','rb')as file: 
+            self.bandera3,self.bandera4 = pickle.load(file) 
+        carga_bandera = font.render("Se han cargado los datos de la partida pasada",1,(200,10,10))#muestra informacion en la pantalla del jugador 
+        self.canvas.get_canvas().blit(carga_bandera,((650,100))) 
+        self.canvas.update()# actualiza la ventana 
+   
+       
+
     def highscore(self): #Funcion que analiza el puntaje
         with open('puntajes.json') as file: #abre el doc
             puntajes = json.load(file)
@@ -793,6 +870,7 @@ class Game(threading.Thread):
                 json.dump(puntajes,file)
         elif self.score2 == puntajes['Scores'][4]:#si es igual no se guarda
             pass
+
 #------------------------------------------Canvas---------------------------------------------------------
 class Canvas:
 
@@ -801,6 +879,7 @@ class Canvas:
         self.height = h
         self.screen = pygame.display.set_mode((w,h))
         pygame.display.set_caption(namec)
+
 
     @staticmethod
     def update():
