@@ -14,7 +14,7 @@ root.resizable(width=False, height=False)
 
 def version():#funcion que muestra una ventana emergente con la version del programa
     tkinter.messagebox.showinfo("Space invaders",'''Instituto Tecnologico de Costa Rica
-        Dakar Death alpha v0.1''')#Cuadro de texto con la informacion
+        Dakar Death alpha v2.0''')#Cuadro de texto con la informacion
 
 
 def salir(): #Esta funcion pregunta al usuario si desea salir al menu o cerrar el juego

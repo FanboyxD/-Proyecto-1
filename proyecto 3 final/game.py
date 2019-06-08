@@ -16,9 +16,6 @@ import gzip
 from multiprocessing import Queue 
 from threading import Timer
 pygame.init()
-#------------------------------Puerto-----------------------------------------
-
-Puerto = 'COM7'
 
 #-------------------------------Sprites---------------------------------------
 walkRight = pygame.image.load('images/Right Car.png')
@@ -199,6 +196,7 @@ class Game(threading.Thread):
         self.police_8 = enemy(-50,100,35,30, 0, 1920)
         self.pausado = 0
         self.start_ticks = pygame.time.get_ticks() #starter tick
+        self.Puerto = 'COM7'
 
     def run(self): #Corre el juego
         clock = pygame.time.Clock() 
@@ -209,7 +207,7 @@ class Game(threading.Thread):
         self.Level = 1 #nivel inicial
         self.bulletx = -10
         self.bullety = round(self.player2.y + 17)
-        direccion = serial.Serial(Puerto,9600)#Se establece una variable con el puerto y frecuencia para el monitoreo del arduino(Se debe cambiar al puerto al que este conectado el arduino)
+        direccion = serial.Serial(self.Puerto,9600)#Se establece una variable con el puerto y frecuencia para el monitoreo del arduino(Se debe cambiar al puerto al que este conectado el arduino)
         while run:
             clock.tick(144) #tiempo en ms de refresco de la ventana
             self.seconds = (pygame.time.get_ticks()-self.start_ticks)/1000 
@@ -539,7 +537,7 @@ class Game(threading.Thread):
                 if jsoninfo["Pause"] == 1 :# con la tecla "p" pausa el juego
                     direccion.close() #cierra la conexion del puerto              
                     self.pausa()
-                    direccion = serial.Serial(Puerto,9600) #luego de quitar la pausa vuelve a iniciar la conexion con el puerto
+                    direccion = serial.Serial(self.Puerto,9600) #luego de quitar la pausa vuelve a iniciar la conexion con el puerto
                     
                 if jsoninfo["Saveas"] == 1:# con la tecla "g" guardar el juego
                     self.save_score()
@@ -708,7 +706,7 @@ class Game(threading.Thread):
     def pausa(self): #funcionn que se encarga de pausar el juego
         self.pausado = 1
         font = pygame.font.SysFont("comicsans",30,True,True)
-        direccion = serial.Serial(Puerto,9600) #reinicia coneccion con el puerto
+        direccion = serial.Serial(self.Puerto,9600) #reinicia coneccion con el puerto
         while self.pausado == 1:#mientras este pausado
             info = direccion.readline()#Se lee lo que resive del arduino
             try: 
@@ -719,16 +717,10 @@ class Game(threading.Thread):
                 if event.type == pygame.QUIT: #acepta el evento quitar
                     run = False
 
-                keys = pygame.key.get_pressed()
-
-                if keys[pygame.K_ESCAPE]: #con la tecla escape tambien sale
-                    self.highscore() #guarda el score
-                    run = False
-
-                if jsoninfo["continue"] == 1: #reanuda la partida con la tecla "r"
-                    direccion.close() #cierra conexion con el puerto 
-                    self.pausado = 0                
-            textopausa = font.render("Pausa, para reanudar presione <r>",1,(200,10,10))#muestra informacion en la pantalla del jugador
+            if jsoninfo["continue"] == 1: #reanuda la partida con la tecla "r"
+                direccion.close() #cierra conexion con el puerto 
+                self.pausado = 0              
+            textopausa = font.render("El juego se encuentra en pausa",1,(200,10,10))#muestra informacion en la pantalla del jugador
             self.canvas.get_canvas().blit(textopausa,((650,100)))
             self.canvas.update()# actualiza la ventana
 
