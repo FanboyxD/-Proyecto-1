@@ -13,6 +13,7 @@ import json
 import serial
 import pickle 
 import gzip 
+from multiprocessing import Queue 
 from threading import Timer
 pygame.init()
 #------------------------------Puerto-----------------------------------------
@@ -37,9 +38,9 @@ brake = pygame.mixer.Sound("sonidos/car_brake.wav")
 class player(threading.Thread,object):
     width = height = 50 #Ancho y alto del jugador
     def __init__(self, startx, starty, color=(255,0,0)): #coordenadas iniciales y color
-        threading.Thread.__init__(self,name="player",target=enemy.draw,args=(self))
-        threading.Thread.__init__(self,name="player",target=enemy.move,args=(self))
-        threading.Thread.__init__(self,name="player",target=enemy.hit,args=(self))
+        threading.Thread.__init__(self,name="player",target=player.draw,args=(self)) 
+        threading.Thread.__init__(self,name="player",target=player.move,args=(self)) 
+        threading.Thread.__init__(self,name="player",target=player.hit,args=(self)) 
         self.x = startx     # se declaran las variables de coord, veloc de movimiento, y que inicie quieto
         self.y = starty
         self.velocity = 6
@@ -148,68 +149,27 @@ class enemy(threading.Thread,object): #imagenes del enemigo
         else:
             self.visible = False
         print("1 hit + 50ptos") #cantidad de puntos obtenidos
-#-----------------------------Obstaculos-----------------------------------------------------------
-class obstacles(object): 
-    img = [pygame.image.load(os.path.join("images","wall.png")),pygame.image.load(os.path.join("images","cactus.png")),pygame.image.load(os.path.join("images","rocks.png"))]
-    def __init__(self,x,y,width,height): #Spites de los obstaculos, pos x/y, ancho x alto
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.count = 0
-        self.hitbox = (self.x+30,self.y+30,self.width-40,self.height-40)
-    def draw(self,win): #dibujado
-        self.hitbox = (self.x+30,self.y+30,self.width-40,self.height-40)
-        if self.count>=1:
-            self.count = 0
-        win.blit(self.img[self.count], (self.x,self.y))#dibuja el numero de sprite que se le indique
-        self.count += 1
-        #pygame.draw.rect(win,(255,0,0),self.hitbox,2)
-    def collide(self,rect): #colision del obstaculo
-        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0]+self.hitbox[2]:
-            if rect[1] < self.hitbox[3]:
-                return True
-        return False
-
-class cactus(obstacles): #cactus que forma parte de los obstaculos
-    img = pygame.image.load(os.path.join("images","cactus.png"))
-    def draw(self,win): #dibujado 
-        self.hitbox = (self.x,self.y,self.width-20,self.height-280)
-        win.blit(self.img,(self.x,self.y))
-        #pygame.draw.rect(win,(255,0,0),self.hitbox,2)
-    def collide(self,rect): #colision
-        self.hitbox = (self.x,self.y,self.width-20,self.height-280)        
-        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0]+self.hitbox[2]:
-            if rect[1] < self.hitbox[3]:
-                return True
-        return False
-            		
-class rocks(obstacles): #rocas que son parte de los obstaculos
-    img = pygame.image.load(os.path.join("images","rocks.png"))
-    def draw(self,win): #dibuja la roca
-        self.hitbox = (self.x,self.y+25,self.width-28,self.height-90)
-        win.blit(self.img,(self.x,self.y))
-        #pygame.draw.rect(win,(255,0,0),self.hitbox,2)
-    def collide(self,rect):#colision con la roca
-        self.hitbox = (self.x,self.y+25,self.width-28,self.height-90)
-        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0]+self.hitbox[2]:
-            if rect[1] < self.hitbox[3]:
-                return True
-        return False
-
-#------------------------------Balas---------------------------------------------------------------
-class projectile(object): #balas del jugador
-    def __init__(self,x,y,radius,color,facing): #se definen sus coord, radio, color, si van a la izquierda o derecha y a que velocidad 
-        self.x = x
-        self.y = y
-        self.radius = radius
-        self.color = color
-        self.facing = facing
-        self.vel = 15 * facing
-
-    def draw(self,win): #dibuja la bala
-        pygame.draw.circle(win, self.color, (self.x,self.y),self.radius)
-
+#-----------------------------Obstaculos----------------------------------------------------------- 
+class obstacles(object):  
+    img = [pygame.image.load(os.path.join("images","wall.png"))] 
+class cactus(obstacles): #cactus que forma parte de los obstaculos 
+    img = pygame.image.load(os.path.join("images","cactus.png"))         
+class rocks(obstacles): #rocas que son parte de los obstaculos 
+    img = pygame.image.load(os.path.join("images","rocks.png")) 
+ 
+#------------------------------Balas--------------------------------------------------------------- 
+class projectile(object): #balas del jugador 
+    def __init__(self,x,y,radius,color,facing): #se definen sus coord, radio, color, si van a la izquierda o derecha y a que velocidad  
+        self.x = x 
+        self.y = y 
+        self.radius = radius 
+        self.color = color 
+        self.facing = facing 
+        self.vel = 15 * facing 
+ 
+    def draw(self,win): #dibuja la bala 
+        pygame.draw.circle(win, self.color, (self.x,self.y),self.radius) 
+ 
 #---------------------------Juego------------------------------------------------------------------
 class Game(threading.Thread):
 
@@ -245,25 +205,21 @@ class Game(threading.Thread):
         self.police_7 = enemy(-50,800,35,30, 0, 1920)
         self.police_8 = enemy(-50,100,35,30, 0, 1920)
         self.pausado = 0
+        self.start_ticks = pygame.time.get_ticks() #starter tick
 
     def run(self): #Corre el juego
         clock = pygame.time.Clock() 
         run = True #inicia el run
         bullets = [] #variable para las balas
         font = pygame.font.SysFont("comicsans",30,True,True)
-
-        pygame.time.set_timer(USEREVENT+1,500)
-        pygame.time.set_timer(USEREVENT+2,random.randrange(2000,3500))#tiempo en que salen los obstaculos
         shootLoop = 0
-        objects = [] #lista donde estan los obstacus
         self.Level = 1 #nivel inicial
         self.bulletx = -10
         self.bullety = round(self.player2.y + 17)
-        start_ticks=pygame.time.get_ticks() #starter tick
         direccion = serial.Serial(Puerto,9600)#Se establece una variable con el puerto y frecuencia para el monitoreo del arduino(Se debe cambiar al puerto al que este conectado el arduino)
         while run:
-            seconds=(pygame.time.get_ticks()-start_ticks)/1000 #calculate how many seconds
             clock.tick(144) #tiempo en ms de refresco de la ventana
+            self.seconds = (pygame.time.get_ticks()-self.start_ticks)/1000 
             info = direccion.readline()#Se lee lo que resive del arduino
             try: 
                 jsoninfo = json.loads(info)#se decodifica la informacion como si fuera un archivo json
@@ -299,29 +255,15 @@ class Game(threading.Thread):
                     self.police_7.health -= 1
                     self.police_8.health -= 1
 
-            if seconds>20: #Tiempo antes de subir de nivel
+            if self.seconds>20: #Tiempo antes de subir de nivel 
                 self.Level += 1 #Aumenta la variable de nivel
     
-            for objectt in objects: #Borra los obstaculos cuando salen de la pantalla
-                if objectt.collide(self.player.hitbox):
-                    pygame.time.delay(1)
-                    self.score -= 10
-                objectt.x -= 1.4
-                if objectt.x < -objectt.width * -1:
-                    objects.pop(objects.index(objectt))
             for event in pygame.event.get(): #analiza cada evento
                 if event.type == pygame.QUIT: #Si es click en la "x" de la ventana, sale del juego
                     run = False 
                 if event.type == USEREVENT+1:
                     self.player.velocity += 1
                     self.player.velocity -=1
-                if event.type == USEREVENT+2:
-                    r=random.randrange(0,2)#Genera spawns aleatorios
-                    if r == 0:
-                        objects.append(obstacles(1920,400,64,64))#coordenadas de spawn de los muros
-                    else:
-                        objects.append(cactus(1920,600,48,320)) #coordenadas de spawn de los cactus
-                        objects.append(rocks(1920,200,64,64))               
 
             if self.police.visible == True: # se define el choque entre el jugador y el enemigo por medio de las hitbox
                 if self.player.hitbox[1] < self.police.hitbox[1]+self.police.hitbox[3] and self.player.hitbox[1]+self.player.hitbox[3] > self.police.hitbox[1]: #Rango donde el judagor recibe daño
@@ -516,7 +458,7 @@ class Game(threading.Thread):
                     bullets.append(projectile(round(self.player.x + 15),round(self.player.y + 10), 6, (200,10,56),facing))
 
             if not(self.player.Brake):
-                if 530 <= jsoninfo["x"] < 1024: #si el eje x del joystick se encuentra entre estos parametros se mueve a la derecha
+                if 540 <= jsoninfo["x"] < 1024: #si el eje x del joystick se encuentra entre estos parametros se mueve a la derecha
                     if 530 <= jsoninfo["x"] < 630: # se modifica la velocidad dependiendo de que tanto se mueva el joystick
                         self.player.velocity = 5
                     elif 630 <= jsoninfo["x"] < 730:
@@ -535,7 +477,7 @@ class Game(threading.Thread):
                         self.player.down = False
                         moving.play() #sonidos
 
-                if 0 <= jsoninfo["x"] < 515: #si esta en estos parametros se mueve a la izquierda
+                if 0 <= jsoninfo["x"] < 520: #si esta en estos parametros se mueve a la izquierda
                     if 415 <= jsoninfo["x"] < 515: # se modifica su velocidad dependiendo de que tanto mueva el joystick
                         self.player.velocity = 5
                     elif 315 <= jsoninfo["x"] < 415:
@@ -554,7 +496,7 @@ class Game(threading.Thread):
                         self.player.down = False
                         moving.play() #sonidos
 
-                if 525 <= jsoninfo["y"] < 1024: #si el eje Y del joystick se encuentra en estos parametros se mueve hacia arriba
+                if 540 <= jsoninfo["y"] < 1024: #si el eje Y del joystick se encuentra en estos parametros se mueve hacia arriba
                     if 525 <= jsoninfo["y"] < 625: #Velocidad dependiendo del joystick
                         self.player.velocity = 5
                     elif 625 <= jsoninfo["y"] < 725:
@@ -703,8 +645,6 @@ class Game(threading.Thread):
                     self.police_8.draw(self.canvas.get_canvas())
             for bullet in bullets:#dibuja las balas que existan
                 bullet.draw(self.canvas.get_canvas())
-            for x in objects:
-                x.draw(self.canvas.get_canvas())#dibuja los obstaculos
 
             #Si se cumple lo siguiente y el jugador accede a la zona de la meta, gana el juego
             if self.score >= 350 and self.banderastot==4 and 860 <= self.player.x <= 1060 and 400 <= self.player.y <= 600:#en caso de ganar el jugador1
@@ -731,7 +671,7 @@ class Game(threading.Thread):
             self.canvas.get_canvas().blit(text,((850,30)))
             text2 = font.render("Banderas: "+str(self.banderastot),1,(255,0,0))#Banderas que se muestra en pantalla
             self.canvas.get_canvas().blit(text2,((650,30)))
-            timer = font.render("Every 20 seconds level increase: "+str(seconds),1,(255,0,0)) 
+            timer = font.render("Every 20 seconds level increase: "+str(self.seconds),1,(255,0,0)) 
             self.canvas.get_canvas().blit(timer,((1000,30)))
 
             if self.bullet2.x < 1920 and self.bullet2.x > 0: #En caso de estar en la ventana se mueve la bala
